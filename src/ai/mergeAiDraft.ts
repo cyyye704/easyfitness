@@ -1,6 +1,10 @@
 import type { AiDailyDraft, AiFoodDraft, AiMergeOptions } from './types.ts'
-import type { DailyRecord, FoodItem } from '../types.ts'
-import { createFoodId, roundToOneDecimal } from '../utils.ts'
+import type { DailyRecord, FoodItem, UnestimatedMeal } from '../types.ts'
+import {
+  createFoodId,
+  createUnestimatedMealId,
+  roundToOneDecimal,
+} from '../utils.ts'
 
 const normalizeDraftNumber = (
   value: number | null,
@@ -42,6 +46,21 @@ const toFoodItem = (food: AiFoodDraft): FoodItem | null => {
   }
 }
 
+const toUnestimatedMeal = (
+  meal: AiDailyDraft['unestimatedMeals'][number],
+): UnestimatedMeal | null => {
+  const description = meal.description.trim()
+  if (!description) {
+    return null
+  }
+
+  return {
+    id: createUnestimatedMealId(),
+    description,
+    reason: meal.reason.trim(),
+  }
+}
+
 export const mergeTrainingText = (currentTraining: string, draftTraining: string) => {
   const current = currentTraining.trim()
   const draft = draftTraining.trim()
@@ -57,6 +76,7 @@ export const mergeTrainingText = (currentTraining: string, draftTraining: string
 
 export const hasSaveableAiDraft = (draft: AiDailyDraft) =>
   draft.foods.some((food) => toFoodItem(food) !== null) ||
+  draft.unestimatedMeals.some((meal) => toUnestimatedMeal(meal) !== null) ||
   draft.training.trim().length > 0 ||
   normalizeDraftNumber(draft.weightKg) !== null ||
   normalizeDraftNumber(draft.sleepHours, 24) !== null
@@ -82,6 +102,10 @@ export const mergeAiDraft = (
     const normalized = toFoodItem(food)
     return normalized ? [normalized] : []
   })
+  const newUnestimatedMeals = draft.unestimatedMeals.flatMap((meal) => {
+    const normalized = toUnestimatedMeal(meal)
+    return normalized ? [normalized] : []
+  })
 
   const draftWeight = normalizeDraftNumber(draft.weightKg)
   const draftSleep = normalizeDraftNumber(draft.sleepHours, 24)
@@ -105,5 +129,9 @@ export const mergeAiDraft = (
     sleepHours,
     training: mergeTrainingText(currentRecord.training, draft.training),
     foods: [...newFoods, ...currentRecord.foods],
+    unestimatedMeals: [
+      ...newUnestimatedMeals,
+      ...currentRecord.unestimatedMeals,
+    ],
   }
 }

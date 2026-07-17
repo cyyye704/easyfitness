@@ -58,6 +58,15 @@ export function FoodLog({ record, onChange }: FoodLogProps) {
     })
   }
 
+  const removeUnestimatedMeal = (mealId: string) => {
+    onChange({
+      ...record,
+      unestimatedMeals: record.unestimatedMeals.filter(
+        (meal) => meal.id !== mealId,
+      ),
+    })
+  }
+
   return (
     <section className="panel" aria-labelledby="food-title">
       <div className="section-heading">
@@ -125,7 +134,33 @@ export function FoodLog({ record, onChange }: FoodLogProps) {
           ))}
         </ul>
       ) : (
-        <p className="empty-state">今天还没有饮食记录</p>
+        <p className="empty-state">今天还没有可计算的食物记录</p>
+      )}
+
+      {record.unestimatedMeals.length > 0 && (
+        <div className="unestimated-meals">
+          <div className="unestimated-meals-heading">
+            <h3>未估算饮食</h3>
+            <span>{record.unestimatedMeals.length} 条</span>
+          </div>
+          <p>这些饮食事实已保存，但不会计入热量和蛋白质汇总。</p>
+          <ul className="unestimated-meal-list">
+            {record.unestimatedMeals.map((meal) => (
+              <li key={meal.id}>
+                <div>
+                  <strong>{meal.description}</strong>
+                  {meal.reason && <span>{meal.reason}</span>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeUnestimatedMeal(meal.id)}
+                >
+                  删除
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   )

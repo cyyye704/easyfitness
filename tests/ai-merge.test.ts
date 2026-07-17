@@ -30,6 +30,7 @@ const draft = (overrides: Partial<AiDailyDraft> = {}): AiDailyDraft => ({
   sleepHours: null,
   training: '',
   foods: [],
+  unestimatedMeals: [],
   unknowns: [],
   feedback: '',
   ...overrides,
@@ -58,6 +59,27 @@ test('confirmed foods get official ids instead of keeping draft ids', () => {
     replaceSleep: false,
   })
   assert.notEqual(result.foods[0].id, 'draft-id')
+})
+
+test('unestimated meals are saved separately and count as saveable content', () => {
+  const proposed = draft({
+    unestimatedMeals: [
+      {
+        id: 'draft-meal-id',
+        description: '在海底捞吃了一顿，消费约 500 元',
+        reason: '菜品和实际食用量不详',
+      },
+    ],
+  })
+  const result = mergeAiDraft(createEmptyRecord(date), proposed, {
+    replaceWeight: false,
+    replaceSleep: false,
+  })
+
+  assert.equal(hasSaveableAiDraft(proposed), true)
+  assert.equal(result.foods.length, 0)
+  assert.equal(result.unestimatedMeals.length, 1)
+  assert.notEqual(result.unestimatedMeals[0].id, 'draft-meal-id')
 })
 
 test('amount suffix is appended exactly once', () => {

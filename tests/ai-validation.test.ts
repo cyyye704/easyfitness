@@ -24,6 +24,7 @@ const rawDraft = (overrides: Record<string, unknown> = {}) => ({
       confidence: 'high',
     },
   ],
+  unestimatedMeals: [],
   unknowns: [],
   feedback: '蛋白质摄入较充足。',
   ...overrides,
@@ -44,6 +45,26 @@ test('valid model output becomes a dated editable draft', () => {
   assert.equal(draft.foods[0].calories, 330)
   assert.equal(draft.foods[0].protein, 61)
   assert.ok(draft.foods[0].id)
+})
+
+test('unestimated meals are preserved without inventing nutrition values', () => {
+  const draft = normalizeModelDraft(
+    rawDraft({
+      foods: [],
+      unestimatedMeals: [
+        {
+          description: '在海底捞吃了一顿，消费约 500 元',
+          reason: '没有说明具体菜品和实际食用量，金额不能换算营养',
+        },
+      ],
+    }),
+    date,
+  )
+
+  assert.equal(draft.foods.length, 0)
+  assert.equal(draft.unestimatedMeals.length, 1)
+  assert.match(draft.unestimatedMeals[0].description, /海底捞/)
+  assert.ok(draft.unestimatedMeals[0].id)
 })
 
 test('the server target date wins over any model supplied date', () => {
@@ -104,6 +125,19 @@ test('invalid confidence causes only that food to be skipped', () => {
   assert.equal(normalizeModelDraft(rawDraft({ foods: [invalidFood] }), date).foods.length, 0)
 })
 
+test('malformed unestimated meals are ignored without discarding valid ones', () => {
+  const validMeal = {
+    description: '聚餐一顿，菜品不详',
+    reason: '无法可靠估算',
+  }
+  const result = normalizeModelDraft(
+    rawDraft({ unestimatedMeals: [null, validMeal] }),
+    date,
+  )
+  assert.equal(result.unestimatedMeals.length, 1)
+  assert.match(result.unknowns.at(-1) ?? '', /unestimated meal/)
+})
+
 test('midpoint suggestions use integer calories and one-decimal protein', () => {
   const food = {
     ...rawDraft().foods[0],
@@ -120,10 +154,18 @@ test('API response validation preserves API ids and edited suggested values', ()
   const apiDraft = {
     ...modelDraft,
     foods: [{ ...modelDraft.foods[0], id: 'server-id', calories: 345, protein: 62.5 }],
+    unestimatedMeals: [
+      {
+        id: 'server-meal-id',
+        description: '聚餐一顿',
+        reason: '菜品不详',
+      },
+    ],
   }
   const result = parseAiDraftApiResponse({ draft: apiDraft }, date)
   assert.equal(result.foods[0].id, 'server-id')
   assert.equal(result.foods[0].calories, 345)
+  assert.equal(result.unestimatedMeals[0].id, 'server-meal-id')
 })
 
 test('API response date mismatch is rejected', () => {

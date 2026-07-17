@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { DEEPSEEK_SYSTEM_PROMPT } from '../api/_lib/deepseekPrompt.ts'
 import { AI_TEXT_MAX_LENGTH } from '../src/ai/types.ts'
 import {
   canSubmitNaturalLog,
@@ -24,4 +25,11 @@ test('invalid dates and an in-flight request disable submission', () => {
 
 test('valid text and date can be submitted while idle', () => {
   assert.equal(canSubmitNaturalLog('今天跑步了', date, false), true)
+})
+
+test('AI prompt separates restaurant context and spending from actual foods', () => {
+  assert.match(DEEPSEEK_SYSTEM_PROMPT, /餐厅名、品牌名/)
+  assert.match(DEEPSEEK_SYSTEM_PROMPT, /消费金额.*不能用于推断热量或蛋白质/)
+  assert.match(DEEPSEEK_SYSTEM_PROMPT, /unestimatedMeals/)
+  assert.match(DEEPSEEK_SYSTEM_PROMPT, /海底捞/)
 })

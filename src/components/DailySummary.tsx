@@ -32,6 +32,12 @@ export function DailySummary({ record, summary, rating }: DailySummaryProps) {
         </div>
       </div>
 
+      {record.unestimatedMeals.length > 0 && (
+        <p className="summary-incomplete-note">
+          另有 {record.unestimatedMeals.length} 条未估算饮食，以上营养数字不代表全天完整摄入。
+        </p>
+      )}
+
       <ul className="reason-list">
         {rating.reasons.slice(0, 3).map((reason) => (
           <li key={reason}>{reason}</li>

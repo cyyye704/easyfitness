@@ -7,12 +7,19 @@ export type FoodItem = {
   protein: number
 }
 
+export type UnestimatedMeal = {
+  id: string
+  description: string
+  reason: string
+}
+
 export type DailyRecord = {
   date: string
   weightKg: number | null
   training: string
   sleepHours: number | null
   foods: FoodItem[]
+  unestimatedMeals: UnestimatedMeal[]
 }
 
 export type NutritionSummary = {

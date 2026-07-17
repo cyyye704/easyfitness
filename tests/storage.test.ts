@@ -70,7 +70,49 @@ test('loadRecords keeps valid records when another food entry is malformed', () 
 
   assert.equal(result.records['2026-07-17'].date, '2026-07-17')
   assert.equal(result.records['2026-07-17'].foods.length, 1)
+  assert.deepEqual(result.records['2026-07-17'].unestimatedMeals, [])
   assert.match(result.warning ?? '', /部分本地记录格式异常/)
+})
+
+test('loadRecords keeps valid unestimated meals and supports legacy records', () => {
+  const storage = new MemoryStorage()
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: storage,
+  })
+  storage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      version: 1,
+      records: {
+        '2026-07-16': {
+          weightKg: null,
+          sleepHours: null,
+          training: '',
+          foods: [],
+        },
+        '2026-07-17': {
+          weightKg: null,
+          sleepHours: null,
+          training: '',
+          foods: [],
+          unestimatedMeals: [
+            {
+              id: 'meal-1',
+              description: '海底捞聚餐，消费约 500 元',
+              reason: '菜品不详，不计入营养汇总',
+            },
+          ],
+        },
+      },
+    }),
+  )
+
+  const result = loadRecords()
+
+  assert.deepEqual(result.records['2026-07-16'].unestimatedMeals, [])
+  assert.equal(result.records['2026-07-17'].unestimatedMeals[0].id, 'meal-1')
+  assert.equal(result.warning, null)
 })
 
 test('loadRecords leaves unreadable source data untouched', () => {

@@ -6,6 +6,7 @@ export const createEmptyRecord = (date: string): DailyRecord => ({
   training: '',
   sleepHours: null,
   foods: [],
+  unestimatedMeals: [],
 })
 
 export const isDateKey = (value: string) => {
@@ -21,7 +22,8 @@ export const hasRecordContent = (record: DailyRecord) =>
   record.weightKg !== null ||
   record.sleepHours !== null ||
   record.training.trim().length > 0 ||
-  record.foods.length > 0
+  record.foods.length > 0 ||
+  record.unestimatedMeals.length > 0
 
 export const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
 
@@ -32,6 +34,8 @@ export const createFoodId = () => {
 
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
+
+export const createUnestimatedMealId = () => `meal-${createFoodId()}`
 
 export const getTodayKey = () => {
   const now = new Date()
@@ -75,6 +79,12 @@ export const evaluateRecord = (record: DailyRecord): RatingResult => {
       score -= 1
       reasons.push('蛋白质记录偏低')
     }
+  }
+
+  if (record.unestimatedMeals.length > 0) {
+    reasons.push(
+      `有 ${record.unestimatedMeals.length} 条饮食未估算，营养汇总不完整`,
+    )
   }
 
   if (record.training.trim()) {

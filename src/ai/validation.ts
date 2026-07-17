@@ -1,10 +1,18 @@
-import type { AiDailyDraft, AiEstimateRange, AiFoodDraft } from './types.js'
+import type {
+  AiDailyDraft,
+  AiEstimateRange,
+  AiFoodDraft,
+  AiUnestimatedMealDraft,
+} from './types.js'
 import {
   AI_AMOUNT_MAX_LENGTH,
   AI_FEEDBACK_MAX_LENGTH,
   AI_FOOD_NAME_MAX_LENGTH,
   AI_MAX_FOODS,
+  AI_MAX_UNESTIMATED_MEALS,
   AI_MAX_UNKNOWNS,
+  AI_MEAL_DESCRIPTION_MAX_LENGTH,
+  AI_MEAL_REASON_MAX_LENGTH,
   AI_TEXT_MAX_LENGTH,
   AI_TRAINING_MAX_LENGTH,
   AI_UNKNOWN_MAX_LENGTH,
@@ -129,6 +137,32 @@ const normalizeModelFood = (value: unknown): AiFoodDraft | null => {
   }
 }
 
+const normalizeModelUnestimatedMeal = (
+  value: unknown,
+): AiUnestimatedMealDraft | null => {
+  if (
+    !isObject(value) ||
+    typeof value.description !== 'string' ||
+    typeof value.reason !== 'string'
+  ) {
+    return null
+  }
+
+  const description = truncate(
+    value.description,
+    AI_MEAL_DESCRIPTION_MAX_LENGTH,
+  )
+  if (!description) {
+    return null
+  }
+
+  return {
+    id: createAiDraftId(),
+    description,
+    reason: truncate(value.reason, AI_MEAL_REASON_MAX_LENGTH),
+  }
+}
+
 export const normalizeModelDraft = (
   value: unknown,
   targetDate: string,
@@ -143,6 +177,7 @@ export const normalizeModelDraft = (
 
   if (
     !Array.isArray(value.foods) ||
+    !Array.isArray(value.unestimatedMeals) ||
     !Array.isArray(value.unknowns) ||
     typeof value.training !== 'string' ||
     typeof value.feedback !== 'string' ||
@@ -163,6 +198,17 @@ export const normalizeModelDraft = (
     }
     return [normalized]
   })
+  let ignoredUnestimatedMeal = false
+  const unestimatedMeals = value.unestimatedMeals
+    .slice(0, AI_MAX_UNESTIMATED_MEALS)
+    .flatMap((meal) => {
+      const normalized = normalizeModelUnestimatedMeal(meal)
+      if (!normalized) {
+        ignoredUnestimatedMeal = true
+        return []
+      }
+      return [normalized]
+    })
 
   const unknowns = value.unknowns
     .filter((item): item is string => typeof item === 'string')
@@ -173,6 +219,9 @@ export const normalizeModelDraft = (
   if (ignoredFood && unknowns.length < AI_MAX_UNKNOWNS) {
     unknowns.push('One malformed food item was ignored.')
   }
+  if (ignoredUnestimatedMeal && unknowns.length < AI_MAX_UNKNOWNS) {
+    unknowns.push('One malformed unestimated meal was ignored.')
+  }
 
   return {
     date: targetDate,
@@ -180,6 +229,7 @@ export const normalizeModelDraft = (
     sleepHours,
     training: truncate(value.training, AI_TRAINING_MAX_LENGTH),
     foods,
+    unestimatedMeals,
     unknowns,
     feedback: truncate(value.feedback, AI_FEEDBACK_MAX_LENGTH),
   }
@@ -271,6 +321,24 @@ const normalizeApiFood = (value: unknown): AiFoodDraft | null => {
   }
 }
 
+const normalizeApiUnestimatedMeal = (
+  value: unknown,
+): AiUnestimatedMealDraft | null => {
+  if (!isObject(value) || typeof value.id !== 'string') {
+    return null
+  }
+
+  const normalized = normalizeModelUnestimatedMeal(value)
+  if (!normalized) {
+    return null
+  }
+
+  return {
+    ...normalized,
+    id: value.id.slice(0, 120) || createAiDraftId(),
+  }
+}
+
 export const parseAiDraftApiResponse = (
   value: unknown,
   expectedDate: string,
@@ -286,6 +354,7 @@ export const parseAiDraftApiResponse = (
 
   if (
     !Array.isArray(draft.foods) ||
+    !Array.isArray(draft.unestimatedMeals) ||
     !Array.isArray(draft.unknowns) ||
     typeof draft.training !== 'string' ||
     typeof draft.feedback !== 'string' ||
@@ -304,6 +373,12 @@ export const parseAiDraftApiResponse = (
       const normalized = normalizeApiFood(food)
       return normalized ? [normalized] : []
     }),
+    unestimatedMeals: draft.unestimatedMeals
+      .slice(0, AI_MAX_UNESTIMATED_MEALS)
+      .flatMap((meal) => {
+        const normalized = normalizeApiUnestimatedMeal(meal)
+        return normalized ? [normalized] : []
+      }),
     unknowns: draft.unknowns
       .filter((item): item is string => typeof item === 'string')
       .map((item) => truncate(item, AI_UNKNOWN_MAX_LENGTH))

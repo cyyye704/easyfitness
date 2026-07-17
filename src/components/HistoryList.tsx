@@ -34,6 +34,8 @@ export function HistoryList({ records, activeDate, onSelectDate }: HistoryListPr
                   </span>
                   <span>
                     {summary.totalCalories} kcal / {summary.totalProtein} g
+                    {record.unestimatedMeals.length > 0 &&
+                      ` · ${record.unestimatedMeals.length} 条未估算`}
                   </span>
                 </button>
               </li>

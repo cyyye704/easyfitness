@@ -298,7 +298,8 @@ button:disabled {
 }
 
 .ai-date-chip,
-.confidence-badge {
+.confidence-badge,
+.unestimated-badge {
   flex: 0 0 auto;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -308,6 +309,11 @@ button:disabled {
   font-family: var(--mono);
   font-size: 10px;
   font-weight: 800;
+}
+
+.unestimated-badge {
+  border-color: rgba(229, 35, 42, 0.4);
+  color: #ffb1b4;
 }
 
 .ai-scalar-grid,
@@ -446,6 +452,16 @@ button:disabled {
 .ai-food-draft > .danger-button {
   width: 100%;
   margin-top: 10px;
+}
+
+.ai-unestimated-heading {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.ai-unestimated-draft {
+  border-color: rgba(229, 35, 42, 0.25);
+  background: rgba(229, 35, 42, 0.04);
 }
 
 .ai-unknowns,
@@ -1018,6 +1034,17 @@ button:disabled {
   color: var(--accent-bright);
 }
 
+.summary-incomplete-note {
+  margin: 12px 0 0;
+  border: 1px solid rgba(229, 35, 42, 0.3);
+  border-radius: 7px;
+  padding: 9px 11px;
+  background: rgba(229, 35, 42, 0.07);
+  color: #ffb1b4;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
 .reason-list {
   display: grid;
   gap: 7px;
@@ -1118,12 +1145,14 @@ button {
 
 .primary-button:active,
 .food-list button:active,
+.unestimated-meal-list button:active,
 .history-list button:active {
   transform: scale(0.975);
 }
 
 .primary-button:focus-visible,
 .food-list button:focus-visible,
+.unestimated-meal-list button:focus-visible,
 .history-list button:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
@@ -1184,6 +1213,98 @@ button {
     transform 160ms ease;
 }
 
+.unestimated-meals {
+  margin-top: 18px;
+  border-top: 1px solid rgba(229, 35, 42, 0.27);
+  padding-top: 15px;
+}
+
+.unestimated-meals-heading {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.unestimated-meals-heading h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.unestimated-meals-heading span {
+  border: 1px solid rgba(229, 35, 42, 0.3);
+  border-radius: 999px;
+  padding: 3px 8px;
+  color: var(--accent-bright);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.unestimated-meals > p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.unestimated-meal-list {
+  display: grid;
+  gap: 8px;
+  margin: 11px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.unestimated-meal-list li {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid rgba(229, 35, 42, 0.24);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(229, 35, 42, 0.045);
+}
+
+.unestimated-meal-list li > div {
+  min-width: 0;
+}
+
+.unestimated-meal-list strong,
+.unestimated-meal-list span {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.unestimated-meal-list strong {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.unestimated-meal-list span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.unestimated-meal-list button {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 103, 108, 0.18);
+  border-radius: 6px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  transition:
+    background 180ms ease,
+    transform 160ms ease;
+}
+
 .history-list {
   display: grid;
   gap: 8px;
@@ -1207,7 +1328,8 @@ button {
 }
 
 .history-list button:hover,
-.food-list li:hover {
+.food-list li:hover,
+.unestimated-meal-list li:hover {
   border-color: rgba(229, 35, 42, 0.4);
   background: var(--surface-hover);
 }

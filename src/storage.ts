@@ -100,6 +100,46 @@ export const loadRecords = (): LoadRecordsResult => {
         ignoredInvalidContent = true
       }
 
+      const unestimatedMeals = Array.isArray(value.unestimatedMeals)
+        ? value.unestimatedMeals.flatMap((meal, index) => {
+            if (!isObject(meal)) {
+              ignoredInvalidContent = true
+              return []
+            }
+
+            const description =
+              typeof meal.description === 'string' ? meal.description.trim() : ''
+            const reason = typeof meal.reason === 'string' ? meal.reason.trim() : ''
+
+            if (!description) {
+              ignoredInvalidContent = true
+              return []
+            }
+
+            if (typeof meal.reason !== 'string') {
+              ignoredInvalidContent = true
+            }
+
+            return [
+              {
+                id:
+                  typeof meal.id === 'string' && meal.id
+                    ? meal.id
+                    : `legacy-meal-${date}-${index}`,
+                description,
+                reason,
+              },
+            ]
+          })
+        : []
+
+      if (
+        value.unestimatedMeals !== undefined &&
+        !Array.isArray(value.unestimatedMeals)
+      ) {
+        ignoredInvalidContent = true
+      }
+
       const weightKg = normalizeNullableNumber(value.weightKg, 0)
       const sleepHours = normalizeNullableNumber(value.sleepHours, 0, 24)
 
@@ -116,6 +156,7 @@ export const loadRecords = (): LoadRecordsResult => {
         sleepHours,
         training: typeof value.training === 'string' ? value.training : '',
         foods,
+        unestimatedMeals,
       }
 
       if (typeof value.training !== 'string') {

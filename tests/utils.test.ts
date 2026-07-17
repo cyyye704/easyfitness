@@ -40,4 +40,29 @@ test('date keys and meaningful record content are identified strictly', () => {
     }),
     true,
   )
+  assert.equal(
+    hasRecordContent({
+      ...createEmptyRecord('2026-07-17'),
+      unestimatedMeals: [
+        { id: 'meal-1', description: '聚餐一顿', reason: '菜品不详' },
+      ],
+    }),
+    true,
+  )
+})
+
+test('unestimated meals do not change nutrition totals or rating score', () => {
+  const record = {
+    ...createEmptyRecord('2026-07-17'),
+    unestimatedMeals: [
+      { id: 'meal-1', description: '海底捞聚餐', reason: '菜品不详' },
+    ],
+  }
+
+  assert.deepEqual(summarizeNutrition(record.foods), {
+    totalCalories: 0,
+    totalProtein: 0,
+  })
+  assert.equal(evaluateRecord(record).score, 0)
+  assert.match(evaluateRecord(record).reasons[0], /未估算/)
 })

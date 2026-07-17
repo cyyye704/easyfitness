@@ -5,6 +5,7 @@ import type {
   AiDailyDraft,
   AiFoodDraft,
   AiMergeOptions,
+  AiUnestimatedMealDraft,
 } from '../ai/types'
 import { createAiDraftId } from '../ai/validation'
 import type { DailyRecord } from '../types'
@@ -47,6 +48,12 @@ const emptyFood = (): AiFoodDraft => ({
   confidence: 'low',
 })
 
+const emptyUnestimatedMeal = (): AiUnestimatedMealDraft => ({
+  id: createAiDraftId(),
+  description: '',
+  reason: '',
+})
+
 export function AiDraftReview({
   draft,
   activeDate,
@@ -63,6 +70,18 @@ export function AiDraftReview({
     onChange({
       ...draft,
       foods: draft.foods.map((item) =>
+        item.id === id ? { ...item, ...patch } : item,
+      ),
+    })
+  }
+
+  const updateUnestimatedMeal = (
+    id: string,
+    patch: Partial<AiUnestimatedMealDraft>,
+  ) => {
+    onChange({
+      ...draft,
+      unestimatedMeals: draft.unestimatedMeals.map((item) =>
         item.id === id ? { ...item, ...patch } : item,
       ),
     })
@@ -259,6 +278,83 @@ export function AiDraftReview({
                 onChange({
                   ...draft,
                   foods: draft.foods.filter((foodItem) => foodItem.id !== item.id),
+                })
+              }
+            >
+              删除
+            </button>
+          </article>
+        ))}
+      </div>
+
+      <div className="ai-food-heading ai-unestimated-heading">
+        <div>
+          <h4>未估算饮食</h4>
+          <p>会保存为饮食事实，但不计入热量和蛋白质汇总。</p>
+        </div>
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() =>
+            onChange({
+              ...draft,
+              unestimatedMeals: [
+                ...draft.unestimatedMeals,
+                emptyUnestimatedMeal(),
+              ],
+            })
+          }
+        >
+          添加未估算记录
+        </button>
+      </div>
+
+      <div className="ai-food-drafts">
+        {draft.unestimatedMeals.length === 0 && (
+          <p className="empty-state">没有未估算的饮食事件。</p>
+        )}
+        {draft.unestimatedMeals.map((item, index) => (
+          <article className="ai-food-draft ai-unestimated-draft" key={item.id}>
+            <div className="ai-food-card-heading">
+              <strong>未估算记录 {index + 1}</strong>
+              <span className="unestimated-badge">不参与汇总</span>
+            </div>
+            <div className="ai-food-fields">
+              <label>
+                <span>饮食事实</span>
+                <input
+                  value={item.description}
+                  aria-label={`未估算记录 ${index + 1} 饮食事实`}
+                  placeholder="例如：在海底捞吃了一顿，消费约 500 元"
+                  onChange={(event) =>
+                    updateUnestimatedMeal(item.id, {
+                      description: event.target.value,
+                    })
+                  }
+                />
+              </label>
+              <label>
+                <span>未估算原因</span>
+                <input
+                  value={item.reason}
+                  aria-label={`未估算记录 ${index + 1} 原因`}
+                  placeholder="例如：未说明菜品和实际食用量"
+                  onChange={(event) =>
+                    updateUnestimatedMeal(item.id, { reason: event.target.value })
+                  }
+                />
+              </label>
+            </div>
+            <button
+              type="button"
+              className="danger-button"
+              aria-label={`删除未估算记录 ${index + 1}`}
+              onClick={() =>
+                onChange({
+                  ...draft,
+                  unestimatedMeals: draft.unestimatedMeals.filter(
+                    (meal) => meal.id !== item.id,
+                  ),
                 })
               }
             >
