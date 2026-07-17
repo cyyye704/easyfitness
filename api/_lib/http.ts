@@ -1,6 +1,6 @@
-import type { AiApiErrorBody, AiApiErrorCode } from '../../src/ai/types.ts'
-import { AI_REQUEST_MAX_BYTES, AI_TEXT_MAX_LENGTH } from '../../src/ai/types.ts'
-import { isDateKey } from '../../src/utils.ts'
+import type { AiApiErrorBody, AiApiErrorCode } from '../../src/ai/types'
+import { AI_REQUEST_MAX_BYTES, AI_TEXT_MAX_LENGTH } from '../../src/ai/types'
+import { isDateKey } from '../../src/utils'
 
 export type ParseDailyLogRequest = {
   text: string

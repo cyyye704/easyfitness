@@ -1,9 +1,9 @@
-import type { AiDailyDraft, AiApiErrorCode } from '../../src/ai/types.ts'
+import type { AiDailyDraft, AiApiErrorCode } from '../../src/ai/types'
 import {
   DeepSeekResponseError,
   parseDeepSeekCompletion,
-} from '../../src/ai/validation.ts'
-import { buildDeepSeekUserPrompt, DEEPSEEK_SYSTEM_PROMPT } from './deepseekPrompt.ts'
+} from '../../src/ai/validation'
+import { buildDeepSeekUserPrompt, DEEPSEEK_SYSTEM_PROMPT } from './deepseekPrompt'
 
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions'
 const DEFAULT_MODEL = 'deepseek-v4-flash'
