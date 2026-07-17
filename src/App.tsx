@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { DailySummary } from './components/DailySummary'
 import { FoodLog } from './components/FoodLog'
@@ -8,19 +8,23 @@ import { TodayForm } from './components/TodayForm'
 import { fatLossKnowledge } from './knowledge'
 import { loadRecords, saveRecords } from './storage'
 import type { DailyRecord } from './types'
-import { createEmptyRecord, evaluateRecord, getTodayKey, summarizeNutrition } from './utils'
+import {
+  createEmptyRecord,
+  evaluateRecord,
+  getTodayKey,
+  hasRecordContent,
+  isDateKey,
+  summarizeNutrition,
+} from './utils'
 
 function App() {
+  const [initialLoad] = useState(loadRecords)
   const [activeDate, setActiveDate] = useState(getTodayKey)
-  const [records, setRecords] = useState<Record<string, DailyRecord>>(() => {
-    const loadedRecords = loadRecords()
-    const today = getTodayKey()
-
-    return {
-      ...loadedRecords,
-      [today]: loadedRecords[today] ?? createEmptyRecord(today),
-    }
-  })
+  const [records, setRecords] = useState<Record<string, DailyRecord>>(
+    initialLoad.records,
+  )
+  const [storageNotice, setStorageNotice] = useState(initialLoad.warning)
+  const hasPendingSave = useRef(false)
 
   const activeRecord = records[activeDate] ?? createEmptyRecord(activeDate)
   const summary = useMemo(
@@ -29,15 +33,25 @@ function App() {
   )
   const rating = useMemo(() => evaluateRecord(activeRecord), [activeRecord])
   const sortedRecords = useMemo(
-    () => Object.values(records).sort((first, second) => second.date.localeCompare(first.date)),
+    () =>
+      Object.values(records)
+        .filter(hasRecordContent)
+        .sort((first, second) => second.date.localeCompare(first.date)),
     [records],
   )
 
   useEffect(() => {
-    saveRecords(records)
+    if (!hasPendingSave.current) {
+      return
+    }
+
+    hasPendingSave.current = false
+    const result = saveRecords(records)
+    setStorageNotice(result.error)
   }, [records])
 
   const updateRecord = (record: DailyRecord) => {
+    hasPendingSave.current = true
     setRecords((currentRecords) => ({
       ...currentRecords,
       [record.date]: record,
@@ -45,11 +59,9 @@ function App() {
   }
 
   const selectDate = (date: string) => {
-    setActiveDate(date)
-    setRecords((currentRecords) => ({
-      ...currentRecords,
-      [date]: currentRecords[date] ?? createEmptyRecord(date),
-    }))
+    if (isDateKey(date)) {
+      setActiveDate(date)
+    }
   }
 
   return (
@@ -68,6 +80,12 @@ function App() {
           />
         </label>
       </header>
+
+      {storageNotice && (
+        <p className="storage-notice" role="status">
+          {storageNotice}
+        </p>
+      )}
 
       <div className="app-layout">
         <div className="primary-column">

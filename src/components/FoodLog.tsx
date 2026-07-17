@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { DailyRecord, FoodItem } from '../types'
-import { createFoodId } from '../utils'
+import { createFoodId, roundToOneDecimal } from '../utils'
 
 type FoodLogProps = {
   record: DailyRecord
@@ -24,8 +24,14 @@ export function FoodLog({ record, onChange }: FoodLogProps) {
 
   const addFood = () => {
     const name = draft.name.trim()
-    const calories = Math.max(0, Math.round(Number(draft.calories) || 0))
-    const protein = Math.max(0, Math.round((Number(draft.protein) || 0) * 10) / 10)
+    const parsedCalories = Number(draft.calories)
+    const parsedProtein = Number(draft.protein)
+    const calories = Number.isFinite(parsedCalories)
+      ? Math.max(0, Math.round(parsedCalories))
+      : 0
+    const protein = Number.isFinite(parsedProtein)
+      ? Math.max(0, roundToOneDecimal(parsedProtein))
+      : 0
 
     if (!name || (calories === 0 && protein === 0)) {
       return

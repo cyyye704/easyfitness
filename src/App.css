@@ -36,6 +36,16 @@ label span {
   gap: 14px;
 }
 
+.storage-notice {
+  margin: 0 0 14px;
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
 .primary-column,
 .side-column {
   display: grid;

@@ -5,12 +5,17 @@ type TodayFormProps = {
   onChange: (record: DailyRecord) => void
 }
 
-const parseNumber = (value: string) => {
+const parseNumber = (value: string, maximum = Number.POSITIVE_INFINITY) => {
   if (value === '') {
     return null
   }
 
-  return Number(value)
+  const number = Number(value)
+  if (!Number.isFinite(number)) {
+    return null
+  }
+
+  return Math.min(maximum, Math.max(0, number))
 }
 
 export function TodayForm({ record, onChange }: TodayFormProps) {
@@ -51,7 +56,7 @@ export function TodayForm({ record, onChange }: TodayFormProps) {
             onChange={(event) =>
               onChange({
                 ...record,
-                sleepHours: parseNumber(event.target.value),
+                sleepHours: parseNumber(event.target.value, 24),
               })
             }
           />

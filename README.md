@@ -55,6 +55,12 @@ npm run dev
 npm run lint
 ```
 
+运行测试：
+
+```bash
+npm test
+```
+
 生产构建：
 
 ```bash

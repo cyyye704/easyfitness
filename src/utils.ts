@@ -8,6 +8,23 @@ export const createEmptyRecord = (date: string): DailyRecord => ({
   foods: [],
 })
 
+export const isDateKey = (value: string) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false
+  }
+
+  const date = new Date(`${value}T00:00:00Z`)
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+}
+
+export const hasRecordContent = (record: DailyRecord) =>
+  record.weightKg !== null ||
+  record.sleepHours !== null ||
+  record.training.trim().length > 0 ||
+  record.foods.length > 0
+
+export const roundToOneDecimal = (value: number) => Math.round(value * 10) / 10
+
 export const createFoodId = () => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID()
@@ -23,13 +40,18 @@ export const getTodayKey = () => {
 }
 
 export const summarizeNutrition = (foods: FoodItem[]): NutritionSummary => {
-  return foods.reduce<NutritionSummary>(
+  const summary = foods.reduce<NutritionSummary>(
     (summary, food) => ({
       totalCalories: summary.totalCalories + food.calories,
       totalProtein: summary.totalProtein + food.protein,
     }),
     { totalCalories: 0, totalProtein: 0 },
   )
+
+  return {
+    totalCalories: Math.round(summary.totalCalories),
+    totalProtein: roundToOneDecimal(summary.totalProtein),
+  }
 }
 
 export const evaluateRecord = (record: DailyRecord): RatingResult => {
