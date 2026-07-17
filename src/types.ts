@@ -28,5 +28,13 @@ export type RatingResult = {
 
 export type KnowledgeItem = {
   title: string
-  points: string[]
+  description: string
+  cards: KnowledgeCard[]
+}
+
+export type KnowledgeCard = {
+  title: string
+  summary: string
+  details: string[]
+  takeaway: string
 }
