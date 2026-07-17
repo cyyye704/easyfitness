@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "test": "node --test --test-isolation=none --experimental-strip-types tests/utils.test.ts tests/storage.test.ts",
+    "dev:full": "vercel dev",
+    "test": "node --test --test-isolation=none --experimental-strip-types tests/utils.test.ts tests/storage.test.ts tests/ai-validation.test.ts tests/ai-merge.test.ts tests/ai-request.test.ts tests/api-http.test.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -26,6 +27,7 @@
     "globals": "^17.6.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
+    "vercel": "^56.3.1",
     "vite": "^8.0.12"
   }
 }

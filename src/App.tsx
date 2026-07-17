@@ -4,6 +4,7 @@ import { DailySummary } from './components/DailySummary'
 import { FoodLog } from './components/FoodLog'
 import { HistoryList } from './components/HistoryList'
 import { KnowledgePanel } from './components/KnowledgePanel'
+import { NaturalLogPanel } from './components/NaturalLogPanel'
 import { TodayForm } from './components/TodayForm'
 import { fatLossKnowledge } from './knowledge'
 import { loadRecords, saveRecords } from './storage'
@@ -65,46 +66,61 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
-      <header className="app-header">
-        <div>
-          <span className="eyebrow">EasyFitness</span>
-          <h1>每日减脂记录</h1>
-        </div>
-        <label className="date-picker">
-          <span>日期</span>
-          <input
-            type="date"
-            value={activeDate}
-            onChange={(event) => selectDate(event.target.value)}
-          />
-        </label>
-      </header>
-
-      {storageNotice && (
-        <p className="storage-notice" role="status">
-          {storageNotice}
-        </p>
-      )}
-
-      <div className="app-layout">
-        <div className="primary-column">
-          <DailySummary record={activeRecord} summary={summary} rating={rating} />
-          <TodayForm record={activeRecord} onChange={updateRecord} />
-          <FoodLog record={activeRecord} onChange={updateRecord} />
-        </div>
-
-        <aside className="side-column">
-          <HistoryList
-            records={sortedRecords}
-            activeDate={activeDate}
-            onSelectDate={selectDate}
-          />
-        </aside>
+    <>
+      <div className="scene-backdrop" aria-hidden="true">
+        <div className="scene scene-gym" />
+        <div className="scene scene-track" />
+        <div className="scene scene-court" />
       </div>
 
-      <KnowledgePanel items={fatLossKnowledge} />
-    </main>
+      <main className="app-shell">
+        <header className="app-header">
+          <div className="brand-block">
+            <span className="eyebrow">EasyFitness / Daily Protocol</span>
+            <h1>每日减脂记录</h1>
+            <p>让训练、饮食与恢复变成可持续的日常系统。</p>
+          </div>
+          <label className="date-picker">
+            <span>记录日期</span>
+            <input
+              type="date"
+              value={activeDate}
+              onChange={(event) => selectDate(event.target.value)}
+            />
+          </label>
+        </header>
+
+        {storageNotice && (
+          <p className="storage-notice" role="status">
+            {storageNotice}
+          </p>
+        )}
+
+        <NaturalLogPanel
+          activeDate={activeDate}
+          currentRecord={activeRecord}
+          onConfirm={updateRecord}
+        />
+
+        <KnowledgePanel items={fatLossKnowledge} />
+
+        <div className="app-layout">
+          <div className="primary-column">
+            <DailySummary record={activeRecord} summary={summary} rating={rating} />
+            <TodayForm record={activeRecord} onChange={updateRecord} />
+            <FoodLog record={activeRecord} onChange={updateRecord} />
+          </div>
+
+          <aside className="side-column">
+            <HistoryList
+              records={sortedRecords}
+              activeDate={activeDate}
+              onSelectDate={selectDate}
+            />
+          </aside>
+        </div>
+      </main>
+    </>
   )
 }
 
