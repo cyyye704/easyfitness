@@ -20,8 +20,8 @@ test('Vercel function graph uses bundle-resolvable runtime imports', () => {
     const source = readFileSync(resolve(file), 'utf8')
     assert.doesNotMatch(
       source,
-      /from\s+['"][^'"]+\.ts['"]/, 
-      `${file} contains a .ts runtime import that Vercel may leave out of the bundle`,
+      /from\s+['"](?:\.\.?\/)[^'"]+(?<!\.js)['"]/,
+      `${file} contains a relative runtime import without a .js extension`,
     )
   }
 })

@@ -1,10 +1,10 @@
-import { AiServiceError, parseDailyLogWithDeepSeek } from '../_lib/deepseek'
+import { AiServiceError, parseDailyLogWithDeepSeek } from '../_lib/deepseek.js'
 import {
   errorResponse,
   HttpRequestError,
   jsonResponse,
   parseDailyLogRequest,
-} from '../_lib/http'
+} from '../_lib/http.js'
 
 const logResult = (details: {
   requestId: string

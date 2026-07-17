@@ -1,4 +1,4 @@
-import type { DailyRecord, FoodItem, NutritionSummary, RatingResult } from './types'
+import type { DailyRecord, FoodItem, NutritionSummary, RatingResult } from './types.js'
 
 export const createEmptyRecord = (date: string): DailyRecord => ({
   date,

@@ -1,4 +1,4 @@
-import type { AiDailyDraft, AiEstimateRange, AiFoodDraft } from './types'
+import type { AiDailyDraft, AiEstimateRange, AiFoodDraft } from './types.js'
 import {
   AI_AMOUNT_MAX_LENGTH,
   AI_FEEDBACK_MAX_LENGTH,
@@ -8,8 +8,8 @@ import {
   AI_TEXT_MAX_LENGTH,
   AI_TRAINING_MAX_LENGTH,
   AI_UNKNOWN_MAX_LENGTH,
-} from './types'
-import { isDateKey, roundToOneDecimal } from '../utils'
+} from './types.js'
+import { isDateKey, roundToOneDecimal } from '../utils.js'
 
 export type DeepSeekResponseErrorKind =
   | 'missing_choices'
