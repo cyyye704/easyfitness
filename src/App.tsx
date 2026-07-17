@@ -5,6 +5,7 @@ import { FoodLog } from './components/FoodLog'
 import { HistoryList } from './components/HistoryList'
 import { KnowledgePanel } from './components/KnowledgePanel'
 import { NaturalLogPanel } from './components/NaturalLogPanel'
+import { PeriodSummaryPanel } from './components/PeriodSummaryPanel'
 import { TodayForm } from './components/TodayForm'
 import { fatLossKnowledge } from './knowledge'
 import { loadRecords, saveRecords } from './storage'
@@ -103,6 +104,8 @@ function App() {
         />
 
         <KnowledgePanel items={fatLossKnowledge} />
+
+        <PeriodSummaryPanel records={records} defaultEndDate={getTodayKey()} />
 
         <div className="app-layout">
           <div className="primary-column">

@@ -141,11 +141,19 @@ const createLinkedAbortController = (requestSignal: AbortSignal) => {
   return { controller, detach: () => requestSignal.removeEventListener('abort', abortFromRequest) }
 }
 
-export const parseDailyLogWithDeepSeek = async (
-  text: string,
-  targetDate: string,
-  requestSignal: AbortSignal,
-): Promise<{ draft: AiDailyDraft; retried: boolean }> => {
+export type DeepSeekJsonRequestOptions<T> = {
+  systemPrompt: string
+  userPrompt: string
+  requestSignal: AbortSignal
+  maxTokens: number
+  parsePayload: (payload: unknown) => T
+}
+
+export const requestDeepSeekJson = async <T>(
+  options: DeepSeekJsonRequestOptions<T>,
+): Promise<{ value: T; retried: boolean }> => {
+  const { systemPrompt, userPrompt, requestSignal, maxTokens, parsePayload } =
+    options
   const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey) {
     throw new AiServiceError(
@@ -177,13 +185,13 @@ export const parseDailyLogWithDeepSeek = async (
           body: JSON.stringify({
             model: process.env.DEEPSEEK_MODEL?.trim() || DEFAULT_MODEL,
             messages: [
-              { role: 'system', content: DEEPSEEK_SYSTEM_PROMPT },
-              { role: 'user', content: buildDeepSeekUserPrompt(text, targetDate) },
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
             ],
             response_format: { type: 'json_object' },
             thinking: { type: 'disabled' },
             temperature: 0.1,
-            max_tokens: 2500,
+            max_tokens: maxTokens,
             stream: false,
           }),
           signal: controller.signal,
@@ -249,7 +257,7 @@ export const parseDailyLogWithDeepSeek = async (
       }
 
       try {
-        return { draft: parseDeepSeekCompletion(payload, targetDate), retried }
+        return { value: parsePayload(payload), retried }
       } catch (error) {
         if (error instanceof DeepSeekResponseError) {
           if (attempt === 0 && shouldRetryParseError(error)) {
@@ -272,4 +280,19 @@ export const parseDailyLogWithDeepSeek = async (
     clearTimeout(timeout)
     detach()
   }
+}
+
+export const parseDailyLogWithDeepSeek = async (
+  text: string,
+  targetDate: string,
+  requestSignal: AbortSignal,
+): Promise<{ draft: AiDailyDraft; retried: boolean }> => {
+  const result = await requestDeepSeekJson({
+    systemPrompt: DEEPSEEK_SYSTEM_PROMPT,
+    userPrompt: buildDeepSeekUserPrompt(text, targetDate),
+    requestSignal,
+    maxTokens: 2500,
+    parsePayload: (payload) => parseDeepSeekCompletion(payload, targetDate),
+  })
+  return { draft: result.value, retried: result.retried }
 }

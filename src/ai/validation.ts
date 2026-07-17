@@ -235,10 +235,7 @@ export const normalizeModelDraft = (
   }
 }
 
-export const parseDeepSeekCompletion = (
-  payload: unknown,
-  targetDate: string,
-): AiDailyDraft => {
+export const parseDeepSeekJsonObject = (payload: unknown) => {
   if (!isObject(payload) || !Array.isArray(payload.choices) || !payload.choices[0]) {
     throw new DeepSeekResponseError('missing_choices', 'Missing choices')
   }
@@ -283,6 +280,19 @@ export const parseDeepSeekCompletion = (
   } catch {
     throw new DeepSeekResponseError('invalid_json', 'Content is not valid JSON')
   }
+
+  if (!isObject(parsed)) {
+    throw new DeepSeekResponseError('invalid_structure', 'JSON root must be an object')
+  }
+
+  return parsed
+}
+
+export const parseDeepSeekCompletion = (
+  payload: unknown,
+  targetDate: string,
+): AiDailyDraft => {
+  const parsed = parseDeepSeekJsonObject(payload)
 
   try {
     return normalizeModelDraft(parsed, targetDate)

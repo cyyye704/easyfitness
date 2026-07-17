@@ -55,9 +55,10 @@ export const assertSameOrigin = (request: Request) => {
   }
 }
 
-export const parseDailyLogRequest = async (
+export const parseJsonObjectRequest = async (
   request: Request,
-): Promise<ParseDailyLogRequest> => {
+  maximumBytes = AI_REQUEST_MAX_BYTES,
+) => {
   if (request.method !== 'POST') {
     throw new HttpRequestError(
       405,
@@ -78,12 +79,12 @@ export const parseDailyLogRequest = async (
   assertSameOrigin(request)
 
   const declaredLength = Number(request.headers.get('content-length'))
-  if (Number.isFinite(declaredLength) && declaredLength > AI_REQUEST_MAX_BYTES) {
+  if (Number.isFinite(declaredLength) && declaredLength > maximumBytes) {
     invalidRequest('请求内容过大。')
   }
 
   const bytes = new Uint8Array(await request.arrayBuffer())
-  if (bytes.byteLength > AI_REQUEST_MAX_BYTES) {
+  if (bytes.byteLength > maximumBytes) {
     invalidRequest('请求内容过大。')
   }
 
@@ -98,7 +99,13 @@ export const parseDailyLogRequest = async (
     invalidRequest('请求内容格式不正确。')
   }
 
-  const candidate = body as Record<string, unknown>
+  return body as Record<string, unknown>
+}
+
+export const parseDailyLogRequest = async (
+  request: Request,
+): Promise<ParseDailyLogRequest> => {
+  const candidate = await parseJsonObjectRequest(request)
   if (typeof candidate.text !== 'string' || typeof candidate.targetDate !== 'string') {
     invalidRequest('text 和 targetDate 为必填字符串。')
   }
