@@ -3,6 +3,9 @@
   "functions": {
     "api/ai/parse-daily-log.ts": {
       "maxDuration": 30
+    },
+    "api/ai/parse-profile.ts": {
+      "maxDuration": 30
     }
   }
 }

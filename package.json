@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:full": "vercel dev",
-    "test": "node --import ./tests/register-ts-loader.mjs --test --test-isolation=none --experimental-strip-types tests/utils.test.ts tests/storage.test.ts tests/ai-validation.test.ts tests/ai-merge.test.ts tests/ai-request.test.ts tests/api-http.test.ts tests/period-summary.test.ts tests/period-summary-validation.test.ts tests/vercel-function-config.test.mjs",
+    "test": "node --import ./tests/register-ts-loader.mjs --test --test-isolation=none --experimental-strip-types tests/utils.test.ts tests/storage.test.ts tests/ai-validation.test.ts tests/ai-merge.test.ts tests/ai-request.test.ts tests/api-http.test.ts tests/period-summary.test.ts tests/period-summary-validation.test.ts tests/profile-validation.test.ts tests/profile-question-engine.test.ts tests/profile-storage.test.ts tests/body-model.test.ts tests/profile-api.test.ts tests/vercel-function-config.test.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

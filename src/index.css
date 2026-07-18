@@ -1,13 +1,17 @@
 :root {
   --bg: #050506;
-  --panel: rgba(11, 11, 13, 0.68);
-  --panel-strong: rgba(8, 8, 10, 0.72);
-  --summary-panel: rgba(20, 10, 12, 0.72);
+  /* Main glass-panel transparency controls. */
+  --panel: rgba(7, 7, 9, 0.18);
+  --panel-strong: rgba(7, 7, 9, 0.24);
+  --panel-accent: rgba(35, 8, 10, 0.22);
+  --summary-panel: rgba(20, 7, 9, 0.22);
+  --panel-blur: 7px;
+  --panel-text-shadow: 0 1px 3px rgba(0, 0, 0, 0.78);
   --surface: rgba(255, 255, 255, 0.035);
   --surface-hover: rgba(229, 35, 42, 0.08);
   --input: rgba(3, 3, 4, 0.72);
   --text: #f6f4f4;
-  --muted: #c0babb;
+  --muted: #d2cccd;
   --border: rgba(255, 255, 255, 0.1);
   --border-strong: rgba(255, 255, 255, 0.16);
   --accent: #e5232a;

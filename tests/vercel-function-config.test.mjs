@@ -6,6 +6,7 @@ import ts from 'typescript'
 
 const serverGraphFiles = [
   'api/ai/parse-daily-log.ts',
+  'api/ai/parse-profile.ts',
   'api/ai/summarize-period.ts',
   'api/_lib/deepseek.ts',
   'api/_lib/deepseekPrompt.ts',
@@ -13,11 +14,15 @@ const serverGraphFiles = [
   'api/_lib/periodSummary.ts',
   'api/_lib/periodSummaryHttp.ts',
   'api/_lib/periodSummaryPrompt.ts',
+  'api/_lib/profile.ts',
+  'api/_lib/profilePrompt.ts',
   'src/ai/validation.ts',
   'src/ai/types.ts',
   'src/periodSummary/calculatePeriodSummary.ts',
   'src/periodSummary/types.ts',
   'src/periodSummary/validation.ts',
+  'src/profile/types.ts',
+  'src/profile/validation.ts',
   'src/utils.ts',
   'src/types.ts',
 ]
@@ -48,6 +53,7 @@ test('Vercel entry graph typechecks with the root tsconfig options', () => {
   const program = ts.createProgram(
     [
       resolve('api/ai/parse-daily-log.ts'),
+      resolve('api/ai/parse-profile.ts'),
       resolve('api/ai/summarize-period.ts'),
     ],
     {

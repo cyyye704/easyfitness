@@ -29,3 +29,6 @@ dist-ssr
 
 # Personal learning notes (kept locally, not committed)
 /learning/
+
+# Developing logs
+/dev-logs/

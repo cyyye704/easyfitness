@@ -1,10 +1,15 @@
 import type { AiApiErrorBody, AiApiErrorCode } from '../../src/ai/types.js'
 import { AI_REQUEST_MAX_BYTES, AI_TEXT_MAX_LENGTH } from '../../src/ai/types.js'
 import { isDateKey } from '../../src/utils.js'
+import { PROFILE_TEXT_MAX_LENGTH } from '../../src/profile/types.js'
 
 export type ParseDailyLogRequest = {
   text: string
   targetDate: string
+}
+
+export type ParseProfileRequest = {
+  text: string
 }
 
 export class HttpRequestError extends Error {
@@ -123,4 +128,21 @@ export const parseDailyLogRequest = async (
   }
 
   return { text, targetDate }
+}
+
+export const parseProfileRequest = async (
+  request: Request,
+): Promise<ParseProfileRequest> => {
+  const candidate = await parseJsonObjectRequest(request)
+  if (typeof candidate.text !== 'string') {
+    invalidRequest('text 为必填字符串。')
+  }
+  const text = (candidate.text as string).trim()
+  if (!text) {
+    invalidRequest('个人身体描述不能为空。')
+  }
+  if (text.length > PROFILE_TEXT_MAX_LENGTH) {
+    invalidRequest(`个人身体描述不能超过 ${PROFILE_TEXT_MAX_LENGTH} 个字符。`)
+  }
+  return { text }
 }
