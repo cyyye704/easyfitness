@@ -46,6 +46,14 @@ const numberOrNull = (
   return parsed
 }
 
+type NumericInputKey =
+  | 'heightCm'
+  | 'baselineWeightKg'
+  | 'age'
+  | 'strengthSessionsPerWeek'
+  | 'cardioSessionsPerWeek'
+  | 'averageSleepHours'
+
 export function ProfileQuestionStep({
   questionId,
   index,
@@ -61,6 +69,33 @@ export function ProfileQuestionStep({
   const [healthChoice, setHealthChoice] = useState<'none' | 'has' | 'unsure' | ''>(
     draft.facts.healthLimitations.length > 0 ? 'has' : answered ? 'none' : '',
   )
+  const [healthLimitationsText, setHealthLimitationsText] = useState(
+    draft.facts.healthLimitations.join('\n'),
+  )
+  const [hasSelectedOption, setHasSelectedOption] = useState(() => {
+    if (answered) {
+      return true
+    }
+    if (questionId === 'primaryGoal') {
+      return draft.facts.primaryGoal !== 'unsure'
+    }
+    if (questionId === 'activityLevel') {
+      return draft.facts.activityLevel !== 'unsure'
+    }
+    if (questionId === 'sexForEnergyEstimate') {
+      return draft.facts.sexForEnergyEstimate !== 'unspecified'
+    }
+    return false
+  })
+  const [numericInputs, setNumericInputs] = useState<Record<NumericInputKey, string>>({
+    heightCm: draft.facts.heightCm?.toString() ?? '',
+    baselineWeightKg: draft.facts.baselineWeightKg?.toString() ?? '',
+    age: draft.facts.age?.toString() ?? '',
+    strengthSessionsPerWeek:
+      draft.facts.strengthSessionsPerWeek?.toString() ?? '',
+    cardioSessionsPerWeek: draft.facts.cardioSessionsPerWeek?.toString() ?? '',
+    averageSleepHours: draft.facts.averageSleepHours?.toString() ?? '',
+  })
 
   if (!question) {
     return null
@@ -68,6 +103,48 @@ export function ProfileQuestionStep({
 
   const updateFacts = (patch: Partial<UserProfileDraft['facts']>) =>
     onChange({ ...draft, facts: { ...draft.facts, ...patch } })
+
+  const updateNumericFact = (
+    key: NumericInputKey,
+    value: string,
+    minimum: number,
+    maximum: number,
+    integer = false,
+  ) => {
+    setNumericInputs((current) => ({ ...current, [key]: value }))
+    updateFacts({ [key]: numberOrNull(value, minimum, maximum, integer) })
+  }
+
+  const numericInputError = (() => {
+    const invalidMessage = (
+      key: NumericInputKey,
+      minimum: number,
+      maximum: number,
+      integer = false,
+    ) =>
+      numericInputs[key].trim() &&
+      numberOrNull(numericInputs[key], minimum, maximum, integer) === null
+        ? `请输入 ${minimum}～${maximum}${integer ? ' 的整数' : ''}。`
+        : null
+
+    switch (questionId) {
+      case 'heightCm':
+        return invalidMessage('heightCm', 100, 250)
+      case 'baselineWeightKg':
+        return invalidMessage('baselineWeightKg', 25, 400)
+      case 'age':
+        return invalidMessage('age', 13, 120, true)
+      case 'trainingFrequency':
+        return (
+          invalidMessage('strengthSessionsPerWeek', 0, 14, true) ??
+          invalidMessage('cardioSessionsPerWeek', 0, 14, true)
+        )
+      case 'averageSleepHours':
+        return invalidMessage('averageSleepHours', 0, 24)
+      default:
+        return null
+    }
+  })()
 
   const canContinue = (() => {
     switch (questionId) {
@@ -78,11 +155,11 @@ export function ProfileQuestionStep({
       case 'age':
         return draft.facts.age !== null
       case 'primaryGoal':
-        return draft.facts.primaryGoal !== 'unsure'
+        return hasSelectedOption
       case 'activityLevel':
-        return draft.facts.activityLevel !== 'unsure'
+        return hasSelectedOption
       case 'sexForEnergyEstimate':
-        return true
+        return hasSelectedOption
       case 'trainingFrequency':
         return (
           draft.facts.strengthSessionsPerWeek !== null ||
@@ -109,8 +186,11 @@ export function ProfileQuestionStep({
         <button
           type="button"
           key={value}
-          aria-pressed={selected === value}
-          onClick={() => onSelect(value)}
+          aria-pressed={hasSelectedOption && selected === value}
+          onClick={() => {
+            setHasSelectedOption(true)
+            onSelect(value)
+          }}
         >
           {label}
         </button>
@@ -144,11 +224,11 @@ export function ProfileQuestionStep({
               min="100"
               max="250"
               step="0.1"
-              value={draft.facts.heightCm ?? ''}
+              inputMode="decimal"
+              aria-invalid={numericInputError !== null}
+              value={numericInputs.heightCm}
               onChange={(event) =>
-                updateFacts({
-                  heightCm: numberOrNull(event.target.value, 100, 250),
-                })
+                updateNumericFact('heightCm', event.target.value, 100, 250)
               }
             />
             <b>cm</b>
@@ -166,11 +246,16 @@ export function ProfileQuestionStep({
               min="25"
               max="400"
               step="0.1"
-              value={draft.facts.baselineWeightKg ?? ''}
+              inputMode="decimal"
+              aria-invalid={numericInputError !== null}
+              value={numericInputs.baselineWeightKg}
               onChange={(event) =>
-                updateFacts({
-                  baselineWeightKg: numberOrNull(event.target.value, 25, 400),
-                })
+                updateNumericFact(
+                  'baselineWeightKg',
+                  event.target.value,
+                  25,
+                  400,
+                )
               }
             />
             <b>kg</b>
@@ -188,9 +273,11 @@ export function ProfileQuestionStep({
               min="13"
               max="120"
               step="1"
-              value={draft.facts.age ?? ''}
+              inputMode="numeric"
+              aria-invalid={numericInputError !== null}
+              value={numericInputs.age}
               onChange={(event) =>
-                updateFacts({ age: numberOrNull(event.target.value, 13, 120, true) })
+                updateNumericFact('age', event.target.value, 13, 120, true)
               }
             />
             <b>岁</b>
@@ -228,15 +315,25 @@ export function ProfileQuestionStep({
               min="0"
               max="14"
               step="1"
-              value={draft.facts.strengthSessionsPerWeek ?? ''}
+              inputMode="numeric"
+              aria-invalid={
+                Boolean(numericInputs.strengthSessionsPerWeek.trim()) &&
+                numberOrNull(
+                  numericInputs.strengthSessionsPerWeek,
+                  0,
+                  14,
+                  true,
+                ) === null
+              }
+              value={numericInputs.strengthSessionsPerWeek}
               onChange={(event) =>
-                updateFacts({
-                  strengthSessionsPerWeek: numberOrNull(
-                    event.target.value,
-                    0,
-                    14,
-                  ),
-                })
+                updateNumericFact(
+                  'strengthSessionsPerWeek',
+                  event.target.value,
+                  0,
+                  14,
+                  true,
+                )
               }
             />
           </label>
@@ -247,11 +344,25 @@ export function ProfileQuestionStep({
               min="0"
               max="14"
               step="1"
-              value={draft.facts.cardioSessionsPerWeek ?? ''}
+              inputMode="numeric"
+              aria-invalid={
+                Boolean(numericInputs.cardioSessionsPerWeek.trim()) &&
+                numberOrNull(
+                  numericInputs.cardioSessionsPerWeek,
+                  0,
+                  14,
+                  true,
+                ) === null
+              }
+              value={numericInputs.cardioSessionsPerWeek}
               onChange={(event) =>
-                updateFacts({
-                  cardioSessionsPerWeek: numberOrNull(event.target.value, 0, 14),
-                })
+                updateNumericFact(
+                  'cardioSessionsPerWeek',
+                  event.target.value,
+                  0,
+                  14,
+                  true,
+                )
               }
             />
           </label>
@@ -268,11 +379,16 @@ export function ProfileQuestionStep({
               min="0"
               max="24"
               step="0.5"
-              value={draft.facts.averageSleepHours ?? ''}
+              inputMode="decimal"
+              aria-invalid={numericInputError !== null}
+              value={numericInputs.averageSleepHours}
               onChange={(event) =>
-                updateFacts({
-                  averageSleepHours: numberOrNull(event.target.value, 0, 24),
-                })
+                updateNumericFact(
+                  'averageSleepHours',
+                  event.target.value,
+                  0,
+                  24,
+                )
               }
             />
             <b>小时</b>
@@ -295,6 +411,7 @@ export function ProfileQuestionStep({
                 onClick={() => {
                   setHealthChoice(value)
                   if (value !== 'has') {
+                    setHealthLimitationsText('')
                     updateFacts({ healthLimitations: [] })
                   }
                 }}
@@ -308,20 +425,27 @@ export function ProfileQuestionStep({
               <span>需要注意的一般限制</span>
               <textarea
                 rows={3}
-                value={draft.facts.healthLimitations.join('\n')}
+                value={healthLimitationsText}
                 placeholder="例如：右膝旧伤，深蹲时需要控制负荷"
-                onChange={(event) =>
+                onChange={(event) => {
+                  setHealthLimitationsText(event.target.value)
                   updateFacts({
                     healthLimitations: event.target.value
                       .split('\n')
                       .map((item) => item.trim())
                       .filter(Boolean),
                   })
-                }
+                }}
               />
             </label>
           )}
         </div>
+      )}
+
+      {numericInputError && (
+        <p className="profile-field-error" role="alert">
+          {numericInputError}
+        </p>
       )}
 
       <div className="profile-step-actions">

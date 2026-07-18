@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   activityLabels,
   confidenceLabels,
@@ -24,15 +25,34 @@ type ProfileDraftReviewProps = {
   onCancelEdit?: () => void
 }
 
-const numberOrNull = (value: string, minimum: number, maximum: number) => {
+const numberOrNull = (
+  value: string,
+  minimum: number,
+  maximum: number,
+  integer = false,
+) => {
   if (!value.trim()) {
     return null
   }
   const number = Number(value)
-  return Number.isFinite(number) && number >= minimum && number <= maximum
+  return Number.isFinite(number) &&
+    number >= minimum &&
+    number <= maximum &&
+    (!integer || Number.isInteger(number))
     ? number
     : null
 }
+
+type NumericInputKey =
+  | 'age'
+  | 'heightCm'
+  | 'baselineWeightKg'
+  | 'waistCm'
+  | 'strengthSessionsPerWeek'
+  | 'cardioSessionsPerWeek'
+  | 'averageSleepHours'
+  | 'bodyFatMin'
+  | 'bodyFatMax'
 
 export function ProfileDraftReview({
   draft,
@@ -42,9 +62,37 @@ export function ProfileDraftReview({
   onConfirm,
   onCancelEdit,
 }: ProfileDraftReviewProps) {
+  const [numericInputs, setNumericInputs] = useState<Record<NumericInputKey, string>>({
+    age: draft.facts.age?.toString() ?? '',
+    heightCm: draft.facts.heightCm?.toString() ?? '',
+    baselineWeightKg: draft.facts.baselineWeightKg?.toString() ?? '',
+    waistCm: draft.facts.waistCm?.toString() ?? '',
+    strengthSessionsPerWeek:
+      draft.facts.strengthSessionsPerWeek?.toString() ?? '',
+    cardioSessionsPerWeek: draft.facts.cardioSessionsPerWeek?.toString() ?? '',
+    averageSleepHours: draft.facts.averageSleepHours?.toString() ?? '',
+    bodyFatMin: draft.estimates.bodyFatPercentRange?.min.toString() ?? '',
+    bodyFatMax: draft.estimates.bodyFatPercentRange?.max.toString() ?? '',
+  })
+  const [listInputs, setListInputs] = useState({
+    healthLimitations: draft.facts.healthLimitations.join('\n'),
+    dietaryPreferences: draft.facts.dietaryPreferences.join('\n'),
+    bodyFatBasis: draft.estimates.bodyFatPercentRange?.basis.join('\n') ?? '',
+  })
   const updateFacts = (patch: Partial<UserProfileDraft['facts']>) =>
     onChange({ ...draft, facts: { ...draft.facts, ...patch } })
   const estimate = draft.estimates.bodyFatPercentRange
+
+  const updateNumericFact = (
+    key: Exclude<NumericInputKey, 'bodyFatMin' | 'bodyFatMax'>,
+    value: string,
+    minimum: number,
+    maximum: number,
+    integer = false,
+  ) => {
+    setNumericInputs((current) => ({ ...current, [key]: value }))
+    updateFacts({ [key]: numberOrNull(value, minimum, maximum, integer) })
+  }
 
   const updateEstimate = (
     patch: Partial<NonNullable<UserProfileDraft['estimates']['bodyFatPercentRange']>>,
@@ -60,6 +108,36 @@ export function ProfileDraftReview({
       estimates: { bodyFatPercentRange: { ...current, ...patch } },
     })
   }
+
+  const updateEstimateNumber = (
+    key: 'bodyFatMin' | 'bodyFatMax',
+    value: string,
+  ) => {
+    setNumericInputs((current) => ({ ...current, [key]: value }))
+    const parsed = numberOrNull(value, 1, 70)
+    if (parsed !== null) {
+      updateEstimate(key === 'bodyFatMin' ? { min: parsed } : { max: parsed })
+    }
+  }
+
+  const invalidNumericFields = [
+    numericInputs.age.trim() && numberOrNull(numericInputs.age, 13, 120, true) === null,
+    numericInputs.heightCm.trim() &&
+      numberOrNull(numericInputs.heightCm, 100, 250) === null,
+    numericInputs.baselineWeightKg.trim() &&
+      numberOrNull(numericInputs.baselineWeightKg, 25, 400) === null,
+    numericInputs.waistCm.trim() &&
+      numberOrNull(numericInputs.waistCm, 30, 250) === null,
+    numericInputs.strengthSessionsPerWeek.trim() &&
+      numberOrNull(numericInputs.strengthSessionsPerWeek, 0, 14, true) === null,
+    numericInputs.cardioSessionsPerWeek.trim() &&
+      numberOrNull(numericInputs.cardioSessionsPerWeek, 0, 14, true) === null,
+    numericInputs.averageSleepHours.trim() &&
+      numberOrNull(numericInputs.averageSleepHours, 0, 24) === null,
+    estimate && numberOrNull(numericInputs.bodyFatMin, 1, 70) === null,
+    estimate && numberOrNull(numericInputs.bodyFatMax, 1, 70) === null,
+  ]
+  const hasInvalidNumericInput = invalidNumericFields.some(Boolean)
 
   return (
     <div className="profile-review" aria-labelledby="profile-review-title">
@@ -81,9 +159,14 @@ export function ProfileDraftReview({
             min="13"
             max="120"
             step="1"
-            value={draft.facts.age ?? ''}
+            inputMode="numeric"
+            aria-invalid={
+              Boolean(numericInputs.age.trim()) &&
+              numberOrNull(numericInputs.age, 13, 120, true) === null
+            }
+            value={numericInputs.age}
             onChange={(event) =>
-              updateFacts({ age: numberOrNull(event.target.value, 13, 120) })
+              updateNumericFact('age', event.target.value, 13, 120, true)
             }
           />
         </label>
@@ -110,9 +193,14 @@ export function ProfileDraftReview({
             min="100"
             max="250"
             step="0.1"
-            value={draft.facts.heightCm ?? ''}
+            inputMode="decimal"
+            aria-invalid={
+              Boolean(numericInputs.heightCm.trim()) &&
+              numberOrNull(numericInputs.heightCm, 100, 250) === null
+            }
+            value={numericInputs.heightCm}
             onChange={(event) =>
-              updateFacts({ heightCm: numberOrNull(event.target.value, 100, 250) })
+              updateNumericFact('heightCm', event.target.value, 100, 250)
             }
           />
         </label>
@@ -123,11 +211,19 @@ export function ProfileDraftReview({
             min="25"
             max="400"
             step="0.1"
-            value={draft.facts.baselineWeightKg ?? ''}
+            inputMode="decimal"
+            aria-invalid={
+              Boolean(numericInputs.baselineWeightKg.trim()) &&
+              numberOrNull(numericInputs.baselineWeightKg, 25, 400) === null
+            }
+            value={numericInputs.baselineWeightKg}
             onChange={(event) =>
-              updateFacts({
-                baselineWeightKg: numberOrNull(event.target.value, 25, 400),
-              })
+              updateNumericFact(
+                'baselineWeightKg',
+                event.target.value,
+                25,
+                400,
+              )
             }
           />
         </label>
@@ -138,9 +234,14 @@ export function ProfileDraftReview({
             min="30"
             max="250"
             step="0.1"
-            value={draft.facts.waistCm ?? ''}
+            inputMode="decimal"
+            aria-invalid={
+              Boolean(numericInputs.waistCm.trim()) &&
+              numberOrNull(numericInputs.waistCm, 30, 250) === null
+            }
+            value={numericInputs.waistCm}
             onChange={(event) =>
-              updateFacts({ waistCm: numberOrNull(event.target.value, 30, 250) })
+              updateNumericFact('waistCm', event.target.value, 30, 250)
             }
           />
         </label>
@@ -192,11 +293,25 @@ export function ProfileDraftReview({
             min="0"
             max="14"
             step="1"
-            value={draft.facts.strengthSessionsPerWeek ?? ''}
+            inputMode="numeric"
+            aria-invalid={
+              Boolean(numericInputs.strengthSessionsPerWeek.trim()) &&
+              numberOrNull(
+                numericInputs.strengthSessionsPerWeek,
+                0,
+                14,
+                true,
+              ) === null
+            }
+            value={numericInputs.strengthSessionsPerWeek}
             onChange={(event) =>
-              updateFacts({
-                strengthSessionsPerWeek: numberOrNull(event.target.value, 0, 14),
-              })
+              updateNumericFact(
+                'strengthSessionsPerWeek',
+                event.target.value,
+                0,
+                14,
+                true,
+              )
             }
           />
         </label>
@@ -207,11 +322,25 @@ export function ProfileDraftReview({
             min="0"
             max="14"
             step="1"
-            value={draft.facts.cardioSessionsPerWeek ?? ''}
+            inputMode="numeric"
+            aria-invalid={
+              Boolean(numericInputs.cardioSessionsPerWeek.trim()) &&
+              numberOrNull(
+                numericInputs.cardioSessionsPerWeek,
+                0,
+                14,
+                true,
+              ) === null
+            }
+            value={numericInputs.cardioSessionsPerWeek}
             onChange={(event) =>
-              updateFacts({
-                cardioSessionsPerWeek: numberOrNull(event.target.value, 0, 14),
-              })
+              updateNumericFact(
+                'cardioSessionsPerWeek',
+                event.target.value,
+                0,
+                14,
+                true,
+              )
             }
           />
         </label>
@@ -222,11 +351,19 @@ export function ProfileDraftReview({
             min="0"
             max="24"
             step="0.5"
-            value={draft.facts.averageSleepHours ?? ''}
+            inputMode="decimal"
+            aria-invalid={
+              Boolean(numericInputs.averageSleepHours.trim()) &&
+              numberOrNull(numericInputs.averageSleepHours, 0, 24) === null
+            }
+            value={numericInputs.averageSleepHours}
             onChange={(event) =>
-              updateFacts({
-                averageSleepHours: numberOrNull(event.target.value, 0, 24),
-              })
+              updateNumericFact(
+                'averageSleepHours',
+                event.target.value,
+                0,
+                24,
+              )
             }
           />
         </label>
@@ -237,32 +374,40 @@ export function ProfileDraftReview({
           <span>健康限制</span>
           <textarea
             rows={3}
-            value={draft.facts.healthLimitations.join('\n')}
+            value={listInputs.healthLimitations}
             placeholder="每行一条；没有可以留空"
-            onChange={(event) =>
+            onChange={(event) => {
+              setListInputs((current) => ({
+                ...current,
+                healthLimitations: event.target.value,
+              }))
               updateFacts({
                 healthLimitations: event.target.value
                   .split('\n')
                   .map((item) => item.trim())
                   .filter(Boolean),
               })
-            }
+            }}
           />
         </label>
         <label>
           <span>饮食偏好</span>
           <textarea
             rows={3}
-            value={draft.facts.dietaryPreferences.join('\n')}
+            value={listInputs.dietaryPreferences}
             placeholder="每行一条；例如不吃牛肉"
-            onChange={(event) =>
+            onChange={(event) => {
+              setListInputs((current) => ({
+                ...current,
+                dietaryPreferences: event.target.value,
+              }))
               updateFacts({
                 dietaryPreferences: event.target.value
                   .split('\n')
                   .map((item) => item.trim())
                   .filter(Boolean),
               })
-            }
+            }}
           />
         </label>
         <label className="profile-notes-field">
@@ -286,12 +431,18 @@ export function ProfileDraftReview({
             <button
               type="button"
               className="danger-button"
-              onClick={() =>
+              onClick={() => {
+                setNumericInputs((current) => ({
+                  ...current,
+                  bodyFatMin: '',
+                  bodyFatMax: '',
+                }))
+                setListInputs((current) => ({ ...current, bodyFatBasis: '' }))
                 onChange({
                   ...draft,
                   estimates: { bodyFatPercentRange: null },
                 })
-              }
+              }}
             >
               删除估计
             </button>
@@ -299,7 +450,18 @@ export function ProfileDraftReview({
             <button
               type="button"
               className="secondary-button"
-              onClick={() => updateEstimate({})}
+              onClick={() => {
+                setNumericInputs((current) => ({
+                  ...current,
+                  bodyFatMin: '1',
+                  bodyFatMax: '1',
+                }))
+                setListInputs((current) => ({
+                  ...current,
+                  bodyFatBasis: '用户在复核时手动补充',
+                }))
+                updateEstimate({})
+              }}
             >
               手动添加估计
             </button>
@@ -314,10 +476,10 @@ export function ProfileDraftReview({
                 min="1"
                 max="70"
                 step="0.1"
-                value={estimate.min}
-                onChange={(event) =>
-                  updateEstimate({ min: numberOrNull(event.target.value, 1, 70) ?? 1 })
-                }
+                inputMode="decimal"
+                aria-invalid={numberOrNull(numericInputs.bodyFatMin, 1, 70) === null}
+                value={numericInputs.bodyFatMin}
+                onChange={(event) => updateEstimateNumber('bodyFatMin', event.target.value)}
               />
             </label>
             <label>
@@ -327,10 +489,10 @@ export function ProfileDraftReview({
                 min="1"
                 max="70"
                 step="0.1"
-                value={estimate.max}
-                onChange={(event) =>
-                  updateEstimate({ max: numberOrNull(event.target.value, 1, 70) ?? 1 })
-                }
+                inputMode="decimal"
+                aria-invalid={numberOrNull(numericInputs.bodyFatMax, 1, 70) === null}
+                value={numericInputs.bodyFatMax}
+                onChange={(event) => updateEstimateNumber('bodyFatMax', event.target.value)}
               />
             </label>
             <label>
@@ -350,15 +512,19 @@ export function ProfileDraftReview({
               <span>估计依据</span>
               <textarea
                 rows={2}
-                value={estimate.basis.join('\n')}
-                onChange={(event) =>
+                value={listInputs.bodyFatBasis}
+                onChange={(event) => {
+                  setListInputs((current) => ({
+                    ...current,
+                    bodyFatBasis: event.target.value,
+                  }))
                   updateEstimate({
                     basis: event.target.value
                       .split('\n')
                       .map((item) => item.trim())
                       .filter(Boolean),
                   })
-                }
+                }}
               />
             </label>
           </div>
@@ -380,6 +546,12 @@ export function ProfileDraftReview({
         </div>
       )}
 
+      {hasInvalidNumericInput && (
+        <p className="profile-field-error" role="alert">
+          请修正超出范围或格式不正确的数字后再保存。
+        </p>
+      )}
+
       <div className="profile-review-actions">
         {editing && onCancelEdit ? (
           <button type="button" className="secondary-button" onClick={onCancelEdit}>
@@ -393,7 +565,7 @@ export function ProfileDraftReview({
         <button
           type="button"
           className="primary-button"
-          disabled={!hasProfileDraftContent(draft)}
+          disabled={!hasProfileDraftContent(draft) || hasInvalidNumericInput}
           onClick={onConfirm}
         >
           {editing ? '保存个人基线' : '确认建立个人基线'}

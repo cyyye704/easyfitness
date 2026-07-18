@@ -1918,6 +1918,20 @@ button {
   line-height: 1.55;
 }
 
+.profile-field-error {
+  margin: 12px 0 0;
+  border-left: 2px solid var(--danger);
+  padding-left: 10px;
+  color: #ffb1b4;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.profile-onboarding :where(input, select, textarea)[aria-invalid='true'] {
+  border-color: rgba(255, 103, 108, 0.75);
+  box-shadow: 0 0 0 2px rgba(229, 35, 42, 0.14);
+}
+
 .profile-incomplete-note,
 .profile-missing-note {
   border-left: 2px solid var(--accent);
