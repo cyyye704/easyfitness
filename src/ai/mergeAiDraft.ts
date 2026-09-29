@@ -127,6 +127,10 @@ export const mergeAiDraft = (
     date: currentRecord.date,
     weightKg,
     sleepHours,
+    nutritionComplete: newFoods.length > 0 || newUnestimatedMeals.length > 0
+      ? false : currentRecord.nutritionComplete,
+    trainingStatus: draft.training.trim() && draft.training.trim() !== currentRecord.training.trim()
+      ? 'unrecorded' : currentRecord.trainingStatus,
     training: mergeTrainingText(currentRecord.training, draft.training),
     foods: [...newFoods, ...currentRecord.foods],
     unestimatedMeals: [

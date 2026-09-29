@@ -4,6 +4,8 @@ export const createEmptyRecord = (date: string): DailyRecord => ({
   date,
   weightKg: null,
   training: '',
+  trainingStatus: 'unrecorded',
+  nutritionComplete: false,
   sleepHours: null,
   foods: [],
   unestimatedMeals: [],
@@ -22,6 +24,9 @@ export const hasRecordContent = (record: DailyRecord) =>
   record.weightKg !== null ||
   record.sleepHours !== null ||
   record.training.trim().length > 0 ||
+  record.trainingStatus === 'trained' ||
+  record.trainingStatus === 'rest' ||
+  record.nutritionComplete === true ||
   record.foods.length > 0 ||
   record.unestimatedMeals.length > 0
 
@@ -58,23 +63,26 @@ export const summarizeNutrition = (foods: FoodItem[]): NutritionSummary => {
   }
 }
 
+export const isNutritionComplete = (record: DailyRecord) =>
+  record.nutritionComplete === true && record.unestimatedMeals.length === 0
+
 export const evaluateRecord = (record: DailyRecord): RatingResult => {
   const summary = summarizeNutrition(record.foods)
   const reasons: string[] = []
   let score = 0
 
-  if (record.foods.length > 0) {
+  if (isNutritionComplete(record)) {
     if (summary.totalCalories >= 1200 && summary.totalCalories <= 2400) {
       score += 1
-      reasons.push('热量记录处在较稳区间')
+      reasons.push('已记录热量处于当前通用评分区间')
     } else if (summary.totalCalories > 2800 || summary.totalCalories < 900) {
       score -= 1
-      reasons.push('热量偏离常规减脂区间')
+      reasons.push('已记录热量超出当前通用评分区间')
     }
 
     if (summary.totalProtein >= 70) {
       score += 1
-      reasons.push('蛋白质摄入较充足')
+      reasons.push('已记录蛋白质达到当前通用评分值')
     } else if (summary.totalProtein < 40) {
       score -= 1
       reasons.push('蛋白质记录偏低')
@@ -87,9 +95,17 @@ export const evaluateRecord = (record: DailyRecord): RatingResult => {
     )
   }
 
-  if (record.training.trim()) {
+  if (!isNutritionComplete(record) && record.unestimatedMeals.length === 0) {
+    reasons.push('饮食尚未确认记完，暂不评价全天摄入')
+  }
+
+  if (record.trainingStatus === 'trained') {
     score += 1
-    reasons.push('完成了训练记录')
+    reasons.push('已确认完成训练')
+  } else if (record.trainingStatus === 'rest') {
+    reasons.push('已记录休息日')
+  } else {
+    reasons.push('训练状态尚未确认')
   }
 
   if (record.sleepHours !== null) {
@@ -104,6 +120,11 @@ export const evaluateRecord = (record: DailyRecord): RatingResult => {
 
   if (record.weightKg !== null) {
     reasons.push('已记录体重')
+  }
+
+  if (!isNutritionComplete(record) || record.trainingStatus === 'unrecorded' || !record.trainingStatus || record.sleepHours === null) {
+    if (record.sleepHours === null) reasons.push('睡眠时长尚未记录')
+    return { rating: '待补充', score, reasons }
   }
 
   if (reasons.length === 0) {

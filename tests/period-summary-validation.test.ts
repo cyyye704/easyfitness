@@ -58,6 +58,17 @@ test('period metric validation rejects inconsistent ranges and counts', () => {
   )
 })
 
+test('complete-day metrics reject impossible counts and averages', () => {
+  assert.ok(metrics)
+  for (const nutrition of [
+    { ...metrics.nutrition, completeDays: 1 },
+    { ...metrics.nutrition, completeAverageCalories: 100 },
+    { ...metrics.nutrition, completeDays: -1 },
+  ]) {
+    assert.throws(() => normalizePeriodSummaryMetrics({ ...metrics, nutrition }), PeriodSummaryValidationError)
+  }
+})
+
 test('DeepSeek period summary output is parsed through a strict JSON shape', () => {
   const result = parseDeepSeekPeriodSummaryCompletion(
     completion({

@@ -103,6 +103,9 @@ export const normalizePeriodSummaryMetrics = (
     !isNullableFiniteInRange(weight.changeKg, -1000, 1000) ||
     !isWeightMethod(weight.method) ||
     !isIntegerInRange(nutrition.recordedDays, 0, totalDays) ||
+    !isIntegerInRange(nutrition.completeDays, 0, totalDays) ||
+    !isNullableFiniteInRange(nutrition.completeAverageCalories, 0, 100_000) ||
+    !isNullableFiniteInRange(nutrition.completeAverageProtein, 0, 10_000) ||
     !isNullableFiniteInRange(nutrition.averageCalories, 0, 100_000) ||
     !isNullableFiniteInRange(nutrition.averageProtein, 0, 10_000) ||
     !isIntegerInRange(nutrition.unestimatedMealCount, 0, 1000) ||
@@ -119,6 +122,7 @@ export const normalizePeriodSummaryMetrics = (
   const recordedDays = coverage.recordedDays as number
   const weightReadingCount = weight.readingCount as number
   const nutritionRecordedDays = nutrition.recordedDays as number
+  const completeDays = nutrition.completeDays as number
   const daysWithUnestimatedMeals = nutrition.daysWithUnestimatedMeals as number
   const unestimatedMealCount = nutrition.unestimatedMealCount as number
   const trainingDays = training.days as number
@@ -129,6 +133,10 @@ export const normalizePeriodSummaryMetrics = (
   if (
     weightReadingCount > recordedDays ||
     nutritionRecordedDays > recordedDays ||
+    completeDays > recordedDays ||
+    completeDays + daysWithUnestimatedMeals > recordedDays ||
+    (completeDays === 0 && (nutrition.completeAverageCalories !== null || nutrition.completeAverageProtein !== null)) ||
+    (completeDays > 0 && (nutrition.completeAverageCalories === null || nutrition.completeAverageProtein === null)) ||
     daysWithUnestimatedMeals > recordedDays ||
     trainingDays > recordedDays ||
     sleepRecordedDays > recordedDays ||
@@ -174,6 +182,9 @@ export const normalizePeriodSummaryMetrics = (
     },
     nutrition: {
       recordedDays: nutritionRecordedDays,
+      completeDays,
+      completeAverageCalories: nutrition.completeAverageCalories as number | null,
+      completeAverageProtein: nutrition.completeAverageProtein as number | null,
       averageCalories: nutrition.averageCalories as number | null,
       averageProtein: nutrition.averageProtein as number | null,
       unestimatedMealCount,

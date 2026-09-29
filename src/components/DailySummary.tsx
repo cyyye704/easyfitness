@@ -1,4 +1,5 @@
 import type { DailyRecord, NutritionSummary, RatingResult } from '../types'
+import { isNutritionComplete } from '../utils'
 
 type DailySummaryProps = {
   record: DailyRecord
@@ -28,21 +29,23 @@ export function DailySummary({ record, summary, rating }: DailySummaryProps) {
         <div>
           <span>评价</span>
           <strong>{rating.rating}</strong>
-          <small>{rating.score >= 0 ? `+${rating.score}` : rating.score}</small>
+          <small>{rating.rating === '待补充' ? '记录尚未完整' : `${rating.score >= 0 ? '+' : ''}${rating.score}`}</small>
         </div>
       </div>
 
-      {record.unestimatedMeals.length > 0 && (
+      {!isNutritionComplete(record) && (
         <p className="summary-incomplete-note">
-          另有 {record.unestimatedMeals.length} 条未估算饮食，以上营养数字不代表全天完整摄入。
+          饮食尚未确认完整，以上数字仅代表已记录部分。
+          {record.unestimatedMeals.length > 0 && ` 另有 ${record.unestimatedMeals.length} 条未估算饮食。`}
         </p>
       )}
 
       <ul className="reason-list">
-        {rating.reasons.slice(0, 3).map((reason) => (
+        {rating.reasons.map((reason) => (
           <li key={reason}>{reason}</li>
         ))}
       </ul>
+      <p className="food-help">饮食记完、训练状态确认并填写睡眠后生成评价。评分沿用通用规则，不代表个人营养目标。</p>
     </section>
   )
 }

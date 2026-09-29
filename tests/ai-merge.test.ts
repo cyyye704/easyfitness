@@ -12,6 +12,16 @@ import { createEmptyRecord } from '../src/utils.ts'
 
 const date = '2026-07-17'
 
+test('AI food additions reopen completeness and training notes require explicit status confirmation', () => {
+  const current = { ...createEmptyRecord(date), nutritionComplete: true, trainingStatus: 'rest' as const }
+  const merged = mergeAiDraft(current, draft({ foods: [food()], training: '跑步' }), { replaceWeight: false, replaceSleep: false })
+  assert.equal(merged.nutritionComplete, false)
+  assert.equal(merged.trainingStatus, 'unrecorded')
+  const weightOnly = mergeAiDraft(current, draft({ weightKg: 70 }), { replaceWeight: false, replaceSleep: false })
+  assert.equal(weightOnly.nutritionComplete, true)
+  assert.equal(weightOnly.trainingStatus, 'rest')
+})
+
 const food = (overrides: Partial<AiFoodDraft> = {}): AiFoodDraft => ({
   id: 'draft-id',
   name: '鸡胸肉',

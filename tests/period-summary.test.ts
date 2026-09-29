@@ -30,6 +30,7 @@ test('period metrics never treat missing days as zero-valued records', () => {
       }),
       '2026-07-14': record('2026-07-14', {
         training: '力量训练',
+        trainingStatus: 'trained',
         sleepHours: 5.5,
         foods: [{ id: 'food-2', name: '已记录饮食', calories: 2000, protein: 100 }],
         unestimatedMeals: [
@@ -54,6 +55,20 @@ test('period metrics never treat missing days as zero-valued records', () => {
   assert.equal(metrics.weight.changeKg, -0.5)
   assert.match(metrics.limitations.join(' '), /未记录日期不能按零计算/)
   assert.match(metrics.limitations.join(' '), /未估算饮食/)
+})
+
+test('complete-day means exclude partial logs and unestimated meals', () => {
+  const makeFood = (calories: number) => [{ id: 'f', name: '饮食', calories, protein: 80 }]
+  const metrics = calculatePeriodSummary({
+    '2026-09-01': record('2026-09-01', { nutritionComplete: true, foods: makeFood(1800) }),
+    '2026-09-02': record('2026-09-02', { foods: makeFood(300), training: '没训练' }),
+    '2026-09-03': record('2026-09-03', { nutritionComplete: true, foods: makeFood(2200),
+      unestimatedMeals: [{ id: 'm', description: '聚餐', reason: '' }] }),
+  }, '2026-09-01', '2026-09-07')!
+  assert.equal(metrics.nutrition.completeDays, 1)
+  assert.equal(metrics.nutrition.completeAverageCalories, 1800)
+  assert.equal(metrics.nutrition.recordedDays, 3)
+  assert.equal(metrics.training.days, 0)
 })
 
 test('six weight readings use first and last three-reading averages', () => {

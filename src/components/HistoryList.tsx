@@ -1,5 +1,5 @@
 import type { DailyRecord } from '../types'
-import { evaluateRecord, summarizeNutrition } from '../utils'
+import { evaluateRecord, isNutritionComplete, summarizeNutrition } from '../utils'
 
 type HistoryListProps = {
   records: DailyRecord[]
@@ -34,6 +34,7 @@ export function HistoryList({ records, activeDate, onSelectDate }: HistoryListPr
                   </span>
                   <span>
                     {summary.totalCalories} kcal / {summary.totalProtein} g
+                    {isNutritionComplete(record) ? ' · 饮食已记完' : ' · 饮食待确认'}
                     {record.unestimatedMeals.length > 0 &&
                       ` · ${record.unestimatedMeals.length} 条未估算`}
                   </span>

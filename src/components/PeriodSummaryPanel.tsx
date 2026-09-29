@@ -7,6 +7,7 @@ import {
 } from '../periodSummary/calculatePeriodSummary'
 import type { PeriodAiSummary } from '../periodSummary/types'
 import type { DailyRecord } from '../types'
+import { WeightTrend } from './WeightTrend'
 
 type PeriodSummaryPanelProps = {
   records: Record<string, DailyRecord>
@@ -214,7 +215,7 @@ export function PeriodSummaryPanel({
             <article>
               <span>训练频率</span>
               <strong>{metrics.training.days} 天</strong>
-              <small>存在训练记录</small>
+              <small>已明确确认训练</small>
             </article>
             <article>
               <span>平均睡眠</span>
@@ -226,6 +227,8 @@ export function PeriodSummaryPanel({
               <small>基于 {metrics.sleep.recordedDays} 天</small>
             </article>
           </div>
+
+          <WeightTrend records={records} startDate={startDate} endDate={endDate} />
 
           <div className="period-nutrition-strip">
             <div>
@@ -252,6 +255,14 @@ export function PeriodSummaryPanel({
               <span>未估算饮食</span>
               <strong>{metrics.nutrition.unestimatedMealCount} 条</strong>
             </div>
+          </div>
+
+          <div className="complete-nutrition-strip">
+            <h3>完整记录日均值</h3>
+            <p>本周期 {metrics.nutrition.completeDays} 天已确认饮食记完且无未估算饮食。</p>
+            <strong>{metrics.nutrition.completeAverageCalories === null ? '暂无完整日数据' :
+              `${metrics.nutrition.completeAverageCalories} kcal / ${metrics.nutrition.completeAverageProtein} g 蛋白质`}</strong>
+            <p>仅代表这些完整日期，不推算未记录日期的摄入。</p>
           </div>
 
           <div className="period-data-notes">

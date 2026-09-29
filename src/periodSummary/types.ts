@@ -18,6 +18,9 @@ export type PeriodSummaryMetrics = {
   }
   nutrition: {
     recordedDays: number
+    completeDays: number
+    completeAverageCalories: number | null
+    completeAverageProtein: number | null
     averageCalories: number | null
     averageProtein: number | null
     unestimatedMealCount: number

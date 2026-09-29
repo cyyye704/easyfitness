@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
+import './recordFeatures.css'
 import { DailySummary } from './components/DailySummary'
 import { FoodLog } from './components/FoodLog'
 import { HistoryList } from './components/HistoryList'
@@ -12,6 +13,7 @@ import { TodayForm } from './components/TodayForm'
 import { fatLossKnowledge } from './knowledge'
 import { loadRecords, saveRecords } from './storage'
 import type { DailyRecord } from './types'
+import { shiftDateKey } from './periodSummary/calculatePeriodSummary'
 import { buildBodyModel } from './profile/buildBodyModel'
 import {
   clearProfileData,
@@ -224,7 +226,10 @@ function App() {
               <div className="primary-column">
                 <DailySummary record={activeRecord} summary={summary} rating={rating} />
                 <TodayForm record={activeRecord} onChange={updateRecord} />
-                <FoodLog record={activeRecord} onChange={updateRecord} />
+                {/* Reset temporary editors and undo history when the date changes.
+                    https://react.dev/learn/preserving-and-resetting-state#resetting-a-form-with-a-key */}
+                <FoodLog key={activeDate} record={activeRecord}
+                  previousRecord={records[shiftDateKey(activeDate, -1)]} onChange={updateRecord} />
               </div>
 
               <aside className="side-column">

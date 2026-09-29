@@ -2,6 +2,7 @@ import type { DailyRecord } from '../types.js'
 import {
   hasRecordContent,
   isDateKey,
+  isNutritionComplete,
   roundToOneDecimal,
   summarizeNutrition,
 } from '../utils.js'
@@ -69,7 +70,7 @@ export const calculatePeriodSummary = (
     .sort((first, second) => first.date.localeCompare(second.date))
 
   const weightReadings = selectedRecords.flatMap((record) =>
-    record.weightKg === null ? [] : [record.weightKg],
+    record.weightKg === null || !Number.isFinite(record.weightKg) || record.weightKg <= 0 ? [] : [record.weightKg],
   )
   let weightStart: number | null = null
   let weightEnd: number | null = null
@@ -89,6 +90,7 @@ export const calculatePeriodSummary = (
   const nutritionSummaries = nutritionRecords.map((record) =>
     summarizeNutrition(record.foods),
   )
+  const completeSummaries = selectedRecords.filter(isNutritionComplete).map((record) => summarizeNutrition(record.foods))
   const sleepHours = selectedRecords.flatMap((record) =>
     record.sleepHours === null ? [] : [record.sleepHours],
   )
@@ -114,10 +116,10 @@ export const calculatePeriodSummary = (
     limitations.push('体重样本较少，当前变化基于最早值和最新值。')
   }
   if (nutritionRecords.length === 0) {
-    limitations.push('该周期没有可计算的饮食记录。')
+    limitations.push(`该周期没有可计算的饮食条目；确认完整记录 ${completeSummaries.length} 天。`)
   } else {
     limitations.push(
-      `营养均值只基于 ${nutritionRecords.length} 个有可计算饮食的日期，不能代表未记录部分。`,
+      `已记录部分均值基于 ${nutritionRecords.length} 个饮食日期；完整日均值基于 ${completeSummaries.length} 个已确认记完且无未估算饮食的日期。未确认日期不能视为全天摄入。`,
     )
   }
   if (unestimatedMealCount > 0) {
@@ -144,6 +146,10 @@ export const calculatePeriodSummary = (
     },
     nutrition: {
       recordedDays: nutritionRecords.length,
+      completeDays: completeSummaries.length,
+      completeAverageCalories: completeSummaries.length > 0
+        ? Math.round(average(completeSummaries.map((item) => item.totalCalories))) : null,
+      completeAverageProtein: nullableAverage(completeSummaries.map((item) => item.totalProtein)),
       averageCalories:
         nutritionSummaries.length > 0
           ? Math.round(average(nutritionSummaries.map((item) => item.totalCalories)))
@@ -155,7 +161,7 @@ export const calculatePeriodSummary = (
       daysWithUnestimatedMeals,
     },
     training: {
-      days: selectedRecords.filter((record) => record.training.trim()).length,
+      days: selectedRecords.filter((record) => record.trainingStatus === 'trained').length,
     },
     sleep: {
       recordedDays: sleepHours.length,

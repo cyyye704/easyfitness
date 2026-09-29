@@ -1,5 +1,6 @@
 import type { DailyRecord } from './types'
 import { createEmptyRecord, isDateKey, roundToOneDecimal } from './utils.ts'
+import { normalizeMeal } from './food/foodUtils.ts'
 
 const STORAGE_KEY = 'easyfitness.records.v1'
 
@@ -91,6 +92,7 @@ export const loadRecords = (): LoadRecordsResult => {
                 name,
                 calories: Math.round(calories),
                 protein: roundToOneDecimal(protein),
+                meal: normalizeMeal(food.meal),
               },
             ]
           })
@@ -155,6 +157,12 @@ export const loadRecords = (): LoadRecordsResult => {
         weightKg,
         sleepHours,
         training: typeof value.training === 'string' ? value.training : '',
+        trainingStatus: value.trainingStatus === 'trained' || value.trainingStatus === 'rest'
+          ? value.trainingStatus : 'unrecorded',
+        nutritionComplete: value.nutritionComplete === true && unestimatedMeals.length === 0 &&
+          Array.isArray(value.foods) && foods.length === value.foods.length &&
+          (value.unestimatedMeals === undefined ||
+            (Array.isArray(value.unestimatedMeals) && value.unestimatedMeals.length === 0)),
         foods,
         unestimatedMeals,
       }

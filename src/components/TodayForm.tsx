@@ -1,4 +1,4 @@
-import type { DailyRecord } from '../types'
+import type { DailyRecord, TrainingStatus } from '../types'
 
 type TodayFormProps = {
   record: DailyRecord
@@ -64,7 +64,15 @@ export function TodayForm({ record, onChange }: TodayFormProps) {
       </div>
 
       <label className="stacked-field">
-        <span>训练</span>
+        <span>训练状态</span>
+        <select value={record.trainingStatus} onChange={(event) => onChange({ ...record, trainingStatus: event.target.value as TrainingStatus })}>
+          <option value="unrecorded">未记录 / 待确认</option>
+          <option value="trained">已训练</option>
+          <option value="rest">休息日</option>
+        </select>
+      </label>
+      <label className="stacked-field">
+        <span>训练备注</span>
         <textarea
           rows={4}
           value={record.training}
