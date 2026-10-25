@@ -2,6 +2,22 @@ import { profileQuestions } from './questions.js'
 import type { ProfileQuestionId, UserProfileDraft } from './types.js'
 import { PROFILE_MAX_QUESTIONS } from './types.js'
 
+export const recordProfileQuestionAnswer = (
+  questionId: ProfileQuestionId,
+  answer: 'answered' | 'skipped',
+  answeredQuestionIds: ProfileQuestionId[],
+  skippedQuestionIds: ProfileQuestionId[],
+) => ({
+  answeredQuestionIds:
+    answer === 'answered'
+      ? [...new Set([...answeredQuestionIds, questionId])]
+      : answeredQuestionIds.filter((id) => id !== questionId),
+  skippedQuestionIds:
+    answer === 'skipped'
+      ? [...new Set([...skippedQuestionIds, questionId])]
+      : skippedQuestionIds.filter((id) => id !== questionId),
+})
+
 export const selectProfileQuestionIds = (
   draft: UserProfileDraft,
   answeredQuestionIds: ProfileQuestionId[] = [],

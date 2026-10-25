@@ -40,6 +40,7 @@ function App() {
     initialLoad.records,
   )
   const [storageNotice, setStorageNotice] = useState(initialLoad.warning)
+  const [hasUnsavedRecords, setHasUnsavedRecords] = useState(false)
   const [profile, setProfile] = useState<UserProfile | null>(
     initialProfileLoad.value,
   )
@@ -79,7 +80,14 @@ function App() {
     hasPendingSave.current = false
     const result = saveRecords(records)
     setStorageNotice(result.error)
+    setHasUnsavedRecords(!result.ok)
   }, [records])
+
+  const retrySaveRecords = () => {
+    const result = saveRecords(records)
+    setStorageNotice(result.error)
+    setHasUnsavedRecords(!result.ok)
+  }
 
   const updateRecord = (record: DailyRecord) => {
     hasPendingSave.current = true
@@ -117,7 +125,7 @@ function App() {
   }
 
   const openProfileOnboarding = () => {
-    if (!profile) {
+    if (!profile && !profileDraftSeed) {
       const loadedDraft = loadProfileDraft()
       setProfileDraftSeed(loadedDraft.value)
       setProfileNotice(loadedDraft.warning)
@@ -164,9 +172,17 @@ function App() {
         </header>
 
         {storageNotice && (
-          <p className="storage-notice" role="status">
-            {storageNotice}
-          </p>
+          <div className="storage-notice" role="status">
+            <p>{storageNotice}</p>
+            {hasUnsavedRecords && (
+              <>
+                <p>更改暂留在当前页面，保存成功前请勿刷新或关闭。</p>
+                <button type="button" className="secondary-button" onClick={retrySaveRecords}>
+                  重试保存
+                </button>
+              </>
+            )}
+          </div>
         )}
 
         {profileNotice && (

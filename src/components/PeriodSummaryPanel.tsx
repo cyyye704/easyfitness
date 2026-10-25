@@ -56,6 +56,19 @@ export function PeriodSummaryPanel({
   )
   const metricsKey = metrics ? JSON.stringify(metrics) : ''
   const aiSummary = generated?.metricsKey === metricsKey ? generated.summary : null
+  const previousMetricsKeyRef = useRef(metricsKey)
+
+  useEffect(() => {
+    if (previousMetricsKeyRef.current === metricsKey) {
+      return
+    }
+    previousMetricsKeyRef.current = metricsKey
+    requestIdRef.current += 1
+    controllerRef.current?.abort()
+    controllerRef.current = null
+    setLoading(false)
+    setError(null)
+  }, [metricsKey])
 
   const stopCurrentRequest = () => {
     requestIdRef.current += 1

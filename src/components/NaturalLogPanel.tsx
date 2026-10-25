@@ -116,7 +116,7 @@ export function NaturalLogPanel({
       setText('')
       setDraft(null)
       setError(null)
-      setSuccess('已添加到当天记录，并保存在当前浏览器。')
+      setSuccess('已添加到当天记录。')
     } finally {
       confirmingRef.current = false
       setConfirming(false)

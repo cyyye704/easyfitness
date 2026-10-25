@@ -1,69 +1,56 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync, readdirSync } from 'node:fs'
+import { isAbsolute, relative, resolve } from 'node:path'
 import test from 'node:test'
 import ts from 'typescript'
 
-const serverGraphFiles = [
-  'api/ai/parse-daily-log.ts',
-  'api/ai/parse-profile.ts',
-  'api/ai/summarize-period.ts',
-  'api/_lib/deepseek.ts',
-  'api/_lib/deepseekPrompt.ts',
-  'api/_lib/http.ts',
-  'api/_lib/periodSummary.ts',
-  'api/_lib/periodSummaryHttp.ts',
-  'api/_lib/periodSummaryPrompt.ts',
-  'api/_lib/profile.ts',
-  'api/_lib/profilePrompt.ts',
-  'src/ai/validation.ts',
-  'src/ai/types.ts',
-  'src/periodSummary/calculatePeriodSummary.ts',
-  'src/periodSummary/types.ts',
-  'src/periodSummary/validation.ts',
-  'src/profile/types.ts',
-  'src/profile/validation.ts',
-  'src/utils.ts',
-  'src/types.ts',
-]
+const projectRoot = resolve('.')
+const entryFiles = readdirSync(resolve('api/ai'))
+  .filter((file) => file.endsWith('.ts'))
+  .map((file) => `api/ai/${file}`)
+
+const configPath = resolve('tsconfig.json')
+const config = ts.readConfigFile(configPath, ts.sys.readFile)
+assert.equal(config.error, undefined)
+const parsed = ts.parseJsonConfigFileContent(
+  config.config,
+  ts.sys,
+  projectRoot,
+  undefined,
+  configPath,
+)
+const program = ts.createProgram(
+  entryFiles.map((file) => resolve(file)),
+  {
+    ...parsed.options,
+    noEmit: true,
+    skipLibCheck: true,
+    allowJs: true,
+    esModuleInterop: true,
+  },
+)
+
+// Follow the actual dependency graph so newly imported helpers are checked too.
+const serverGraphFiles = program.getSourceFiles().filter((file) => {
+  const projectPath = relative(projectRoot, file.fileName)
+  return !file.isDeclarationFile &&
+    !program.isSourceFileFromExternalLibrary(file) &&
+    !isAbsolute(projectPath) &&
+    projectPath !== '..' &&
+    !projectPath.startsWith('../')
+})
 
 test('Vercel function graph uses bundle-resolvable runtime imports', () => {
   for (const file of serverGraphFiles) {
-    const source = readFileSync(resolve(file), 'utf8')
     assert.doesNotMatch(
-      source,
+      file.text,
       /from\s+['"](?:\.\.?\/)[^'"]+(?<!\.js)['"]/,
-      `${file} contains a relative runtime import without a .js extension`,
+      `${relative(projectRoot, file.fileName)} contains a relative runtime import without a .js extension`,
     )
   }
 })
 
 test('Vercel entry graph typechecks with the root tsconfig options', () => {
-  const configPath = resolve('tsconfig.json')
-  const config = ts.readConfigFile(configPath, ts.sys.readFile)
-  assert.equal(config.error, undefined)
-
-  const parsed = ts.parseJsonConfigFileContent(
-    config.config,
-    ts.sys,
-    resolve('.'),
-    undefined,
-    configPath,
-  )
-  const program = ts.createProgram(
-    [
-      resolve('api/ai/parse-daily-log.ts'),
-      resolve('api/ai/parse-profile.ts'),
-      resolve('api/ai/summarize-period.ts'),
-    ],
-    {
-      ...parsed.options,
-      noEmit: true,
-      skipLibCheck: true,
-      allowJs: true,
-      esModuleInterop: true,
-    },
-  )
   const errors = ts
     .getPreEmitDiagnostics(program)
     .filter((diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error)
@@ -73,8 +60,15 @@ test('Vercel entry graph typechecks with the root tsconfig options', () => {
     0,
     ts.formatDiagnostics(errors, {
       getCanonicalFileName: (fileName) => fileName,
-      getCurrentDirectory: () => resolve('.'),
+      getCurrentDirectory: () => projectRoot,
       getNewLine: () => '\n',
     }),
   )
+})
+
+test('all AI functions have enough execution time for the upstream timeout', () => {
+  const config = JSON.parse(readFileSync(resolve('vercel.json'), 'utf8'))
+  for (const file of entryFiles) {
+    assert.equal(config.functions[file]?.maxDuration, 30, file)
+  }
 })

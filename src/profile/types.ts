@@ -70,19 +70,11 @@ export type ProfileQuestionId =
   | 'averageSleepHours'
   | 'healthLimitations'
 
-export type ProfileQuestionInputType =
-  | 'number'
-  | 'single-select'
-  | 'compound-number'
-  | 'text'
-
 export type ProfileQuestion = {
   id: ProfileQuestionId
   priority: number
-  requiredForUsableModel: boolean
   title: string
   description?: string
-  inputType: ProfileQuestionInputType
   shouldAsk: (draft: UserProfileDraft) => boolean
 }
 
@@ -134,8 +126,4 @@ export type BodyModel = {
   level: BodyModelLevel
   missingImportantFields: string[]
   cautions: string[]
-}
-
-export type ProfileApiResponse = {
-  draft: UserProfileDraft
 }

@@ -1,0 +1,267 @@
+@media (hover: hover) {
+  .panel:not(.knowledge-panel):hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-2px);
+  }
+
+  .course-module-card:hover {
+    border-color: rgba(229, 35, 42, 0.5);
+    background: rgba(229, 35, 42, 0.075);
+    transform: translateY(-3px);
+  }
+
+  .knowledge-overview-card:hover {
+    border-color: rgba(229, 35, 42, 0.35);
+  }
+}
+
+@media (min-width: 720px) {
+  .app-shell {
+    padding: 28px;
+  }
+
+  .app-header {
+    grid-template-columns: minmax(0, 1fr) 220px;
+    align-items: end;
+    padding: 36px 0 30px;
+  }
+
+  .panel {
+    padding: 19px;
+  }
+
+  .knowledge-panel {
+    padding: 28px;
+  }
+
+  .knowledge-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .knowledge-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .period-metric-grid,
+  .period-nutrition-strip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .food-form {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.8fr) 88px;
+    align-items: end;
+  }
+
+  .ai-food-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-compound-input,
+  .profile-review-grid,
+  .profile-review-text-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-notes-field,
+  .profile-estimate-basis {
+    grid-column: 1 / -1;
+  }
+
+  .profile-estimate-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 880px) {
+  .app-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+
+  .side-column {
+    position: sticky;
+    top: 20px;
+  }
+}
+
+@media (min-width: 1040px) {
+  .knowledge-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .knowledge-overview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .summary-grid {
+    gap: 6px;
+  }
+
+  .summary-grid div {
+    padding: 11px 8px;
+  }
+
+  .summary-grid strong {
+    font-size: 19px;
+  }
+
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .period-summary-heading,
+  .period-ai-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .period-range-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .period-range-tabs button {
+    min-width: 0;
+    padding-inline: 4px;
+  }
+
+  .period-custom-range,
+  .period-metric-grid,
+  .period-nutrition-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .period-ai-heading .primary-button {
+    width: 100%;
+  }
+
+  .knowledge-heading-row,
+  .course-view-header,
+  .knowledge-overview-group-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .knowledge-heading-row .course-text-button,
+  .knowledge-overview-header .course-text-button {
+    width: 100%;
+  }
+
+  .course-view-header {
+    gap: 9px;
+  }
+
+  .course-position {
+    text-align: left;
+  }
+
+  .course-lesson-card {
+    padding: 19px 16px;
+  }
+
+  .course-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .knowledge-overview-group-heading {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .knowledge-overview-group-heading .knowledge-index,
+  .knowledge-overview-group-heading h3,
+  .knowledge-overview-group-heading button {
+    grid-column: 1;
+  }
+
+  .knowledge-overview-group-heading button {
+    grid-row: auto;
+    margin-top: 5px;
+  }
+
+  .natural-log-meta,
+  .ai-review-heading,
+  .ai-food-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .natural-log-meta span,
+  .ai-date-chip {
+    align-self: flex-start;
+  }
+
+  .ai-scalar-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-review-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-input-meta,
+  .profile-summary-heading,
+  .profile-estimate-heading,
+  .profile-card-footer,
+  .profile-entry-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-option-grid,
+  .profile-summary-grid,
+  .profile-step-actions,
+  .profile-review-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-step-actions,
+  .profile-review-actions {
+    display: grid;
+  }
+
+  .profile-intro-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-entry-card .secondary-button,
+  .profile-summary-heading .secondary-button,
+  .profile-estimate-heading button {
+    width: 100%;
+  }
+
+  .profile-clear-confirm,
+  .profile-clear-confirm p {
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .scene {
+    display: none;
+  }
+
+  .scene-gym {
+    display: block;
+    opacity: var(--scene-opacity);
+    transform: none;
+  }
+}

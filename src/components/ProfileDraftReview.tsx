@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { numberOrNull } from '../profile/formNumbers'
 import {
   activityLabels,
   confidenceLabels,
@@ -23,24 +24,6 @@ type ProfileDraftReviewProps = {
   onBack: () => void
   onConfirm: () => void
   onCancelEdit?: () => void
-}
-
-const numberOrNull = (
-  value: string,
-  minimum: number,
-  maximum: number,
-  integer = false,
-) => {
-  if (!value.trim()) {
-    return null
-  }
-  const number = Number(value)
-  return Number.isFinite(number) &&
-    number >= minimum &&
-    number <= maximum &&
-    (!integer || Number.isInteger(number))
-    ? number
-    : null
 }
 
 type NumericInputKey =

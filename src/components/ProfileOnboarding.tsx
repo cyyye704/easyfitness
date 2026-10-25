@@ -3,12 +3,10 @@ import { requestProfileDraft } from '../profile/client'
 import {
   getNextProfileQuestionId,
   getPreviousProfileQuestionId,
+  recordProfileQuestionAnswer,
   selectProfileQuestionIds,
 } from '../profile/questionEngine'
-import {
-  removeProfileDraft,
-  saveProfileDraft,
-} from '../profile/profileStorage'
+import { saveProfileDraft } from '../profile/profileStorage'
 import type {
   ProfileOnboardingStage,
   ProfileQuestionId,
@@ -203,12 +201,12 @@ export function ProfileOnboarding({
       ...current,
       stage: nextId ? 'questions' : 'review',
       currentQuestionId: nextId,
-      answeredQuestionIds: skipped
-        ? current.answeredQuestionIds
-        : [...new Set([...current.answeredQuestionIds, currentId])],
-      skippedQuestionIds: skipped
-        ? [...new Set([...current.skippedQuestionIds, currentId])]
-        : current.skippedQuestionIds.filter((id) => id !== currentId),
+      ...recordProfileQuestionAnswer(
+        currentId,
+        skipped ? 'skipped' : 'answered',
+        current.answeredQuestionIds,
+        current.skippedQuestionIds,
+      ),
     }))
   }
 
@@ -239,7 +237,6 @@ export function ProfileOnboarding({
       setError(saveError)
       return
     }
-    removeProfileDraft()
     setFlow((current) => ({ ...current, stage: 'completed' }))
   }
 

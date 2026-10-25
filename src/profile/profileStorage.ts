@@ -136,7 +136,6 @@ export const removeProfile = () =>
   removeKey(PROFILE_STORAGE_KEY, '无法清除个人档案。')
 
 export const clearProfileData = (): WriteResult => {
-  const profileResult = removeProfile()
   const draftResult = removeProfileDraft()
-  return profileResult.ok ? draftResult : profileResult
+  return draftResult.ok ? removeProfile() : draftResult
 }

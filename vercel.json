@@ -6,6 +6,9 @@
     },
     "api/ai/parse-profile.ts": {
       "maxDuration": 30
+    },
+    "api/ai/summarize-period.ts": {
+      "maxDuration": 30
     }
   }
 }
