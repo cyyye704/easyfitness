@@ -2,6 +2,17 @@
 
 本文配置邮箱登录、密码重置、按账号隔离的每日记录/档案，以及 AI 接口登录校验。以下步骤由项目维护者在自己的 Supabase 与 Vercel 项目中执行；仓库自动测试不代表远端数据库、邮件或真实 AI 已经联调成功。
 
+## 当前项目部署记录（2026-10-28）
+
+- 正式站点：[EasyFitness](https://easyfitness-phi.vercel.app/)。Vercel 项目为 `cyyue/easyfitness`，GitHub `main` 已连接自动部署。
+- Supabase 项目为 `uvvrcwxzxesortxlqczk`，已执行 `202610280001_workspace.sql` 和 `202610280002_record_features.sql`。
+- 四项 Supabase 公开配置已设置到 Vercel 的 Production、Preview、Development；既有 DeepSeek 服务端变量保留。本地 `.env.local` 已填写 Supabase 公开配置，不包含 DeepSeek Key。
+- 邮箱注册、密码登录和邮箱验证已开启，匿名登录关闭。Site URL 为正式域名，三个生产别名及 localhost 的登录/密码恢复回调已加入允许列表。
+- 验证通过：193 项自动测试、lint、build、模拟浏览器回归；真实数据库本人 CRUD、跨账号隔离、版本冲突与匿名访问拒绝；正式站点资源和三个 AI 接口的未登录/伪造 token 拒绝。数据库验证仅使用事务内临时测试数据，已回滚。
+- 自定义 SMTP 按用户选择暂缓配置。非项目成员的注册确认和密码重置邮件暂不可视为可用；真实邮箱确认、密码恢复、登录后网页保存和有效会话的 DeepSeek 调用仍需完成实际联调。
+
+给朋友使用前，先完成第 5 节的 SMTP 配置，再按第 8 节验证真实邮箱与账号流程。不要通过关闭邮箱验证绕过邮件配置。
+
 ## 1. 建立 Supabase 项目并取得公开配置
 
 在 [Supabase Dashboard](https://supabase.com/dashboard) 新建项目，等待数据库就绪。在项目 Connect 面板或 Settings → API Keys 中取得：
