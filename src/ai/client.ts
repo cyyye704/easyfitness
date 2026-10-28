@@ -19,11 +19,13 @@ export const requestNaturalLogDraft = (
   text: string,
   targetDate: string,
   signal: AbortSignal,
+  userId?: string,
 ): Promise<AiDailyDraft> =>
   requestAiJson({
     endpoint: '/api/ai/parse-daily-log',
     body: { text, targetDate },
     signal,
+    userId,
     parseResponse: (payload) => parseAiDraftApiResponse(payload, targetDate),
     messages: {
       network: '无法连接整理服务，请检查网络后重试。',

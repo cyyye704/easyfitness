@@ -23,11 +23,13 @@ import { ProfileDraftReview } from './ProfileDraftReview'
 import { ProfileQuestionStep } from './ProfileQuestionStep'
 
 type ProfileOnboardingProps = {
+  userId?: string
   initialDraft: StoredProfileDraft | null
   existingProfile?: UserProfile | null
-  onComplete: (profile: UserProfile) => string | null
+  onComplete: (profile: UserProfile) => Promise<string | null> | string | null
   onSkip: (draft: StoredProfileDraft) => void
   onCancelEdit?: () => void
+  onEditChange?: () => void
 }
 
 type ProfileFlowState = {
@@ -69,11 +71,13 @@ const toStoredDraft = (flow: ProfileFlowState): StoredProfileDraft => ({
 })
 
 export function ProfileOnboarding({
+  userId,
   initialDraft,
   existingProfile = null,
   onComplete,
   onSkip,
   onCancelEdit,
+  onEditChange,
 }: ProfileOnboardingProps) {
   const editing = existingProfile !== null
   const [flow, setFlow] = useState<ProfileFlowState>(() => {
@@ -101,6 +105,7 @@ export function ProfileOnboarding({
       currentQuestionId: null,
     }
   })
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [storageError, setStorageError] = useState<string | null>(null)
   const controllerRef = useRef<AbortController | null>(null)
@@ -112,9 +117,9 @@ export function ProfileOnboarding({
       return
     }
     pendingSaveRef.current = false
-    const result = saveProfileDraft(toStoredDraft(flow))
+    const result = saveProfileDraft(toStoredDraft(flow), userId)
     setStorageError(result.error)
-  }, [editing, flow])
+  }, [editing, flow, userId])
 
   useEffect(
     () => () => {
@@ -127,6 +132,7 @@ export function ProfileOnboarding({
   const updateFlow = (
     updater: ProfileFlowState | ((current: ProfileFlowState) => ProfileFlowState),
   ) => {
+    if (editing) onEditChange?.()
     pendingSaveRef.current = true
     setFlow(updater)
   }
@@ -143,7 +149,7 @@ export function ProfileOnboarding({
     controllerRef.current = controller
     const requestId = requestIdRef.current + 1
     requestIdRef.current = requestId
-    saveProfileDraft(toStoredDraft({ ...flow, stage: 'intro' }))
+    saveProfileDraft(toStoredDraft({ ...flow, stage: 'intro' }), userId)
     setError(null)
     setFlow((current) => ({ ...current, stage: 'parsing' }))
 
@@ -151,6 +157,7 @@ export function ProfileOnboarding({
       const parsedDraft = await requestProfileDraft(
         flow.rawText.trim(),
         controller.signal,
+        userId,
       )
       if (requestIdRef.current !== requestId) {
         return
@@ -222,8 +229,8 @@ export function ProfileOnboarding({
     }))
   }
 
-  const confirmProfile = () => {
-    if (!flow.parsedDraft) {
+  const confirmProfile = async () => {
+    if (saving || !flow.parsedDraft) {
       return
     }
     const profile = createUserProfile(
@@ -232,7 +239,9 @@ export function ProfileOnboarding({
       flow.skippedQuestionIds,
       existingProfile,
     )
-    const saveError = onComplete(profile)
+    setSaving(true)
+    const saveError = await onComplete(profile)
+    setSaving(false)
     if (saveError) {
       setError(saveError)
       return
@@ -274,7 +283,7 @@ export function ProfileOnboarding({
           </label>
           <div className="profile-input-meta">
             <p>
-              这段文字会发送给 DeepSeek 用于整理。确认后的个人档案只保存在当前浏览器，EasyFitness 不建立服务端个人档案。
+              这段文字会发送给 DeepSeek 用于整理。{userId ? '确认后的档案保存在你的云端账号；未确认草稿只留在本机。' : '确认后的个人档案只保存在当前浏览器。'}
             </p>
             <span>{flow.rawText.length} / {PROFILE_TEXT_MAX_LENGTH}</span>
           </div>
@@ -330,7 +339,9 @@ export function ProfileOnboarding({
         )}
 
       {flow.stage === 'review' && flow.parsedDraft && (
+        <fieldset className="workspace-fields" disabled={saving}>
         <ProfileDraftReview
+          saving={saving}
           draft={flow.parsedDraft}
           editing={editing}
           onChange={(parsedDraft) =>
@@ -346,6 +357,7 @@ export function ProfileOnboarding({
           onConfirm={confirmProfile}
           onCancelEdit={onCancelEdit}
         />
+        </fieldset>
       )}
 
       <div className="ai-status-region" aria-live="polite" aria-atomic="true">

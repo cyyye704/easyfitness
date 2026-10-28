@@ -19,11 +19,13 @@ const errorMessages: Partial<Record<AiApiErrorBody['code'], string>> = {
 export const requestProfileDraft = (
   text: string,
   signal: AbortSignal,
+  userId?: string,
 ): Promise<UserProfileDraft> =>
   requestAiJson({
     endpoint: '/api/ai/parse-profile',
     body: { text },
     signal,
+    userId,
     parseResponse: parseProfileApiResponse,
     messages: {
       network: '无法连接个人档案服务，请检查网络后重试。',

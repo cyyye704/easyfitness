@@ -19,11 +19,13 @@ const errorMessages: Partial<Record<AiApiErrorBody['code'], string>> = {
 export const requestPeriodAiSummary = (
   metrics: PeriodSummaryMetrics,
   signal: AbortSignal,
+  userId?: string,
 ): Promise<PeriodAiSummary> =>
   requestAiJson({
     endpoint: '/api/ai/summarize-period',
     body: { metrics },
     signal,
+    userId,
     parseResponse: (payload) => parsePeriodSummaryApiResponse(payload).summary,
     messages: {
       network: '无法连接阶段总结服务，请检查网络后重试。',

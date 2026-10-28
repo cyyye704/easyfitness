@@ -9,6 +9,7 @@ import type { PeriodAiSummary } from '../periodSummary/types'
 import type { DailyRecord } from '../types'
 
 type PeriodSummaryPanelProps = {
+  userId?: string
   records: Record<string, DailyRecord>
   defaultEndDate: string
 }
@@ -26,6 +27,7 @@ const formatWeightChange = (change: number | null) => {
 }
 
 export function PeriodSummaryPanel({
+  userId,
   records,
   defaultEndDate,
 }: PeriodSummaryPanelProps) {
@@ -105,7 +107,7 @@ export function PeriodSummaryPanel({
     setLoading(true)
     setError(null)
     try {
-      const summary = await requestPeriodAiSummary(metrics, controller.signal)
+      const summary = await requestPeriodAiSummary(metrics, controller.signal, userId)
       if (requestIdRef.current !== requestId) {
         return
       }
@@ -292,7 +294,7 @@ export function PeriodSummaryPanel({
               </button>
             </div>
             <p className="period-ai-privacy">
-              点击后只发送上方聚合指标，不发送食物名称、原始备注或完整本地记录。
+              点击后只发送上方聚合指标，不发送食物名称、原始备注或完整记录。
             </p>
 
             <div className="ai-status-region" aria-live="polite" aria-atomic="true">

@@ -13,14 +13,18 @@ import {
 const url = 'https://easyfitness.example/api/ai/parse-profile'
 const originalFetch = globalThis.fetch
 const originalInfo = console.info
-const originalFeature = process.env.AI_FEATURE_ENABLED
-const originalKey = process.env.DEEPSEEK_API_KEY
+const originalEnvironment = Object.fromEntries(
+  ['AI_FEATURE_ENABLED', 'DEEPSEEK_API_KEY', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY']
+    .map((name) => [name, process.env[name]]),
+)
 
 afterEach(() => {
   globalThis.fetch = originalFetch
   console.info = originalInfo
-  process.env.AI_FEATURE_ENABLED = originalFeature
-  process.env.DEEPSEEK_API_KEY = originalKey
+  for (const [name, value] of Object.entries(originalEnvironment)) {
+    if (value === undefined) delete process.env[name]
+    else process.env[name] = value
+  }
 })
 
 const request = (
@@ -31,6 +35,7 @@ const request = (
     method: options.method ?? 'POST',
     headers: {
       'Content-Type': options.contentType ?? 'application/json',
+      Authorization: 'Bearer test-access-token',
       ...(options.origin ? { Origin: options.origin } : {}),
     },
     body: options.method === 'GET' ? undefined : JSON.stringify(body),
@@ -79,9 +84,14 @@ test('disabled profile AI returns the stable error code', async () => {
 test('profile function validates mocked DeepSeek output and never echoes raw input', async () => {
   process.env.AI_FEATURE_ENABLED = 'true'
   process.env.DEEPSEEK_API_KEY = 'test-only-key'
+  process.env.SUPABASE_URL = 'https://project.supabase.co'
+  process.env.SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_test'
   console.info = () => undefined
-  globalThis.fetch = async () =>
-    new Response(
+  globalThis.fetch = async (url) => {
+    if (String(url) === 'https://project.supabase.co/auth/v1/user') {
+      return Response.json({ id: 'user-id', is_anonymous: false })
+    }
+    return new Response(
       JSON.stringify({
         choices: [
           {
@@ -113,6 +123,7 @@ test('profile function validates mocked DeepSeek output and never echoes raw inp
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     )
+  }
 
   const rawText = '这是不应该出现在响应里的原始身体描述'
   const response = await profileHandler.fetch(request({ text: rawText }))

@@ -66,9 +66,9 @@ test('Vercel entry graph typechecks with the root tsconfig options', () => {
   )
 })
 
-test('all AI functions have enough execution time for the upstream timeout', () => {
+test('all AI functions allow time for authentication and the upstream request', () => {
   const config = JSON.parse(readFileSync(resolve('vercel.json'), 'utf8'))
   for (const file of entryFiles) {
-    assert.equal(config.functions[file]?.maxDuration, 30, file)
+    assert.equal(config.functions[file]?.maxDuration, 35, file)
   }
 })

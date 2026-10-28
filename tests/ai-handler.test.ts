@@ -9,6 +9,9 @@ import { calculatePeriodSummary } from '../src/periodSummary/calculatePeriodSumm
 
 const privateInput = 'PRIVATE_USER_INPUT_不应写入日志'
 const privateKey = 'test-secret-not-for-logs'
+const accessToken = 'test-private-access-token'
+const authUrl = 'https://project.supabase.co/auth/v1/user'
+const authUser = { id: 'user-id', is_anonymous: false, email: 'private@example.com' }
 const targetDate = '2026-07-17'
 const metrics = calculatePeriodSummary({}, '2026-07-11', targetDate)
 assert.ok(metrics)
@@ -62,7 +65,10 @@ const routes = [
 const makeRequest = (route: string, body: unknown) =>
   new Request(`https://easyfitness.example/api/ai/${route}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: JSON.stringify(body),
   })
 
@@ -70,6 +76,8 @@ const configureAi = (context: TestContext, enabled = 'true') => {
   for (const [name, value] of Object.entries({
     AI_FEATURE_ENABLED: enabled,
     DEEPSEEK_API_KEY: privateKey,
+    SUPABASE_URL: 'https://project.supabase.co',
+    SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test',
   })) {
     const previous = process.env[name]
     process.env[name] = value
@@ -87,6 +95,8 @@ const assertSafeLog = (logs: string[]) => {
   assert.equal(logs.length, 1)
   assert.ok(!logs[0].includes(privateInput))
   assert.ok(!logs[0].includes(privateKey))
+  assert.ok(!logs[0].includes(accessToken))
+  assert.ok(!logs[0].includes(authUser.email))
   const entry = JSON.parse(logs[0])
   const allowedKeys = [
     'requestId', 'time', 'elapsedMs', 'category', 'upstreamStatus', 'retried', 'feature',
@@ -108,7 +118,8 @@ for (const route of routes) {
     test(`${route.name} preserves ${scenario.name}, response shape and safe logs`, async (context) => {
       const logs = configureAi(context, 'TRUE')
       let calls = 0
-      context.mock.method(globalThis, 'fetch', async () => {
+      context.mock.method(globalThis, 'fetch', async (url) => {
+        if (String(url) === authUrl) return Response.json(authUser)
         const status = scenario.statuses[calls++]
         assert.ok(status, 'unexpected extra upstream request')
         return new Response(JSON.stringify({
@@ -164,6 +175,10 @@ for (const route of routes) {
 
 test('shared handler forwards cancellation and hides unexpected service error details', async (context) => {
   const logs = configureAi(context)
+  context.mock.method(globalThis, 'fetch', async (url) => {
+    assert.equal(String(url), authUrl)
+    return Response.json(authUser)
+  })
   const request = makeRequest('parse-daily-log', { text: privateInput, targetDate })
   const handler = createAiHandler({
     disabledMessage: 'disabled',

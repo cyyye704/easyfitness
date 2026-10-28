@@ -1,4 +1,5 @@
 import { AiServiceError } from './deepseek.js'
+import { requireAuthenticatedUser } from './auth.js'
 import { errorResponse, HttpRequestError, jsonResponse } from './http.js'
 
 type AiHandlerOptions<Input> = {
@@ -38,6 +39,7 @@ export const createAiHandler = <Input>(options: AiHandlerOptions<Input>) =>
         return errorResponse(503, 'AI_DISABLED', options.disabledMessage)
       }
 
+      await requireAuthenticatedUser(request)
       const result = await options.execute(input, request.signal)
       logResult('success', result.retried)
       return jsonResponse(result.body)

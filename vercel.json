@@ -2,13 +2,13 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/ai/parse-daily-log.ts": {
-      "maxDuration": 30
+      "maxDuration": 35
     },
     "api/ai/parse-profile.ts": {
-      "maxDuration": 30
+      "maxDuration": 35
     },
     "api/ai/summarize-period.ts": {
-      "maxDuration": 30
+      "maxDuration": 35
     }
   }
 }

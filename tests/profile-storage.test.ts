@@ -57,6 +57,18 @@ const createDraft = (): StoredProfileDraft => ({
   updatedAt: '2026-07-18T00:00:00.000Z',
 })
 
+test('account drafts remain separate from other accounts and the original local draft', () => {
+  installStorage()
+  assert.equal(saveProfileDraft(createDraft()).ok, true)
+  assert.equal(saveProfileDraft({ ...createDraft(), rawText: '账号 A 草稿' }, 'account-a').ok, true)
+  assert.equal(loadProfileDraft('account-b').value, null)
+  assert.equal(loadProfileDraft('account-a').value?.rawText, '账号 A 草稿')
+  assert.equal(loadProfileDraft().value?.rawText, '想减脂')
+  assert.equal(removeProfileDraft('account-a').ok, true)
+  assert.equal(loadProfileDraft('account-a').value, null)
+  assert.equal(loadProfileDraft().value?.rawText, '想减脂')
+})
+
 test('profile and unfinished profile draft save and load independently', () => {
   installStorage()
   const draft = createEmptyProfileDraft()

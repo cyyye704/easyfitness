@@ -78,9 +78,11 @@ const recoverDraft = (value: unknown): StoredProfileDraft | null => {
   }
 }
 
-export const loadProfileDraft = (): LoadResult<StoredProfileDraft | null> => {
+const draftKey = (userId?: string) => userId ? `${PROFILE_DRAFT_STORAGE_KEY}:${userId}` : PROFILE_DRAFT_STORAGE_KEY
+
+export const loadProfileDraft = (userId?: string): LoadResult<StoredProfileDraft | null> => {
   try {
-    const raw = localStorage.getItem(PROFILE_DRAFT_STORAGE_KEY)
+    const raw = localStorage.getItem(draftKey(userId))
     if (!raw) {
       return { value: null, warning: null }
     }
@@ -107,10 +109,10 @@ export const loadProfileDraft = (): LoadResult<StoredProfileDraft | null> => {
   }
 }
 
-export const saveProfileDraft = (draft: StoredProfileDraft): WriteResult => {
+export const saveProfileDraft = (draft: StoredProfileDraft, userId?: string): WriteResult => {
   try {
     const normalized = normalizeStoredProfileDraft(draft)
-    localStorage.setItem(PROFILE_DRAFT_STORAGE_KEY, JSON.stringify(normalized))
+    localStorage.setItem(draftKey(userId), JSON.stringify(normalized))
     return { ok: true, error: null }
   } catch {
     return {
@@ -129,8 +131,8 @@ const removeKey = (key: string, error: string): WriteResult => {
   }
 }
 
-export const removeProfileDraft = () =>
-  removeKey(PROFILE_DRAFT_STORAGE_KEY, '无法清除个人档案草稿。')
+export const removeProfileDraft = (userId?: string) =>
+  removeKey(draftKey(userId), '无法清除个人档案草稿。')
 
 export const removeProfile = () =>
   removeKey(PROFILE_STORAGE_KEY, '无法清除个人档案。')

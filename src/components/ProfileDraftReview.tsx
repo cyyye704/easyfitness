@@ -18,6 +18,7 @@ import type {
 import { hasProfileDraftContent } from '../profile/validation'
 
 type ProfileDraftReviewProps = {
+  saving?: boolean
   draft: UserProfileDraft
   editing: boolean
   onChange: (draft: UserProfileDraft) => void
@@ -38,6 +39,7 @@ type NumericInputKey =
   | 'bodyFatMax'
 
 export function ProfileDraftReview({
+  saving = false,
   draft,
   editing,
   onChange,
@@ -551,7 +553,7 @@ export function ProfileDraftReview({
           disabled={!hasProfileDraftContent(draft) || hasInvalidNumericInput}
           onClick={onConfirm}
         >
-          {editing ? '保存个人基线' : '确认建立个人基线'}
+          {saving ? '正在保存……' : editing ? '保存个人基线' : '确认建立个人基线'}
         </button>
       </div>
     </div>
