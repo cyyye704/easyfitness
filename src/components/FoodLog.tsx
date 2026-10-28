@@ -8,15 +8,16 @@ import { FoodEditor } from './FoodEditor'
 import { FoodShortcuts } from './FoodShortcuts'
 
 type FoodLogProps = {
+  userId?: string
   record: DailyRecord
   previousRecord?: DailyRecord
   onChange: (record: DailyRecord) => void
 }
 
-export function FoodLog({ record, previousRecord, onChange }: FoodLogProps) {
+export function FoodLog({ userId, record, previousRecord, onChange }: FoodLogProps) {
   const [editing, setEditing] = useState<string | null>(null)
   const [deleted, setDeleted] = useState<DeletedFood[]>([])
-  const [initialTemplates] = useState(loadFoodTemplates)
+  const [initialTemplates] = useState(() => loadFoodTemplates(userId))
   const [templates, setTemplates] = useState(initialTemplates.templates)
   const [templateError, setTemplateError] = useState(initialTemplates.error)
   const [notice, setNotice] = useState('')
@@ -24,7 +25,7 @@ export function FoodLog({ record, previousRecord, onChange }: FoodLogProps) {
 
   const saveTemplates = (next: FoodTemplate[]) => {
     if (!initialTemplates.writable) return false
-    const error = saveFoodTemplates(next)
+    const error = saveFoodTemplates(next, userId)
     setTemplateError(error)
     if (error) return false
     setTemplates(next)
@@ -51,7 +52,10 @@ export function FoodLog({ record, previousRecord, onChange }: FoodLogProps) {
     <section className="panel food-panel" aria-labelledby="food-title">
       <div className="section-heading"><span className="eyebrow">Food</span><h2 id="food-title">饮食</h2></div>
       <FoodEditor submitLabel="添加食物" onSave={(food) => onChange(appendFoods(record, [{ ...food, id: createFoodId() }]))} />
-      <FoodShortcuts record={record} previousRecord={previousRecord} templates={templates} onSaveTemplates={saveTemplates}
+      <p className="food-help">{userId
+        ? '当前账号的收藏与餐食模板只保存在这台设备的浏览器，不会跨设备同步。'
+        : '收藏与餐食模板只保存在当前浏览器。'}</p>
+      <FoodShortcuts userId={userId} record={record} previousRecord={previousRecord} templates={templates} onSaveTemplates={saveTemplates}
         onAdd={(foods) => onChange(appendFoods(record, foods))} />
       {templateError && <p className="ai-inline-error" role="alert">{templateError}</p>}
       <p className="food-help" role="status">{notice}</p>

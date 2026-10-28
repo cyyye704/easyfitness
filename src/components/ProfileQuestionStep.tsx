@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { numberOrNull } from '../profile/formNumbers'
 import {
   activityLabels,
   goalLabels,
@@ -23,27 +24,6 @@ type ProfileQuestionStepProps = {
   onBack: () => void
   onSkip: () => void
   onContinue: () => void
-}
-
-const numberOrNull = (
-  value: string,
-  minimum: number,
-  maximum: number,
-  integer = false,
-) => {
-  if (!value.trim()) {
-    return null
-  }
-  const parsed = Number(value)
-  if (
-    !Number.isFinite(parsed) ||
-    parsed < minimum ||
-    parsed > maximum ||
-    (integer && !Number.isInteger(parsed))
-  ) {
-    return null
-  }
-  return parsed
 }
 
 type NumericInputKey =
@@ -458,8 +438,14 @@ export function ProfileQuestionStep({
         <button
           type="button"
           className="primary-button"
-          disabled={!canContinue}
-          onClick={onContinue}
+          disabled={!canContinue || numericInputError !== null}
+          onClick={() => {
+            if (questionId === 'healthLimitations' && healthChoice === 'unsure') {
+              onSkip()
+            } else {
+              onContinue()
+            }
+          }}
         >
           {index === total - 1 ? '检查我的信息' : '继续'}
         </button>

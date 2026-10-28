@@ -1,0 +1,337 @@
+.natural-log-panel {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+  border-color: rgba(229, 35, 42, 0.42);
+  background: linear-gradient(145deg, var(--panel-accent), var(--panel-strong));
+}
+
+.natural-log-panel::before {
+  position: absolute;
+  content: '';
+  width: 180px;
+  height: 180px;
+  top: -115px;
+  right: -55px;
+  border-radius: 50%;
+  background: rgba(229, 35, 42, 0.09);
+  filter: blur(42px);
+  pointer-events: none;
+}
+
+.ai-panel-heading,
+.natural-log-input,
+.natural-log-meta,
+.natural-log-submit,
+.ai-status-region,
+.ai-draft-review {
+  position: relative;
+}
+
+.natural-log-input textarea {
+  min-height: 132px;
+  line-height: 1.65;
+}
+
+.ai-target-date {
+  margin: 8px 0 0;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.natural-log-meta {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.natural-log-meta p {
+  max-width: 700px;
+  margin: 0;
+}
+
+.natural-log-meta span {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+}
+
+.natural-log-submit {
+  width: 100%;
+  margin-top: 13px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.3);
+  opacity: 0.48;
+  transform: none !important;
+}
+
+.ai-status-region:empty {
+  display: none;
+}
+
+.ai-inline-error,
+.ai-inline-success {
+  margin: 12px 0 0;
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.ai-inline-error {
+  border: 1px solid rgba(255, 103, 108, 0.35);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.ai-inline-success {
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text);
+}
+
+.ai-draft-review {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.ai-review-heading,
+.ai-food-heading,
+.ai-food-card-heading,
+.ai-review-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ai-review-heading h3,
+.ai-food-heading h4 {
+  margin: 4px 0 0;
+  color: var(--text);
+}
+
+.ai-review-heading h3 {
+  font-size: 20px;
+}
+
+.ai-date-chip,
+.confidence-badge,
+.unestimated-badge {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--muted);
+  padding: 5px 9px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.unestimated-badge {
+  border-color: rgba(229, 35, 42, 0.4);
+  color: #ffb1b4;
+}
+
+.ai-scalar-grid,
+.ai-food-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-scalar-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 15px;
+}
+
+.ai-conflict-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 10px 0 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px 12px;
+}
+
+.ai-conflict-choice legend {
+  padding: 0 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ai-conflict-choice label {
+  display: flex;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 7px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.ai-conflict-choice input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.ai-training-field {
+  margin-top: 14px;
+}
+
+.ai-food-heading {
+  align-items: end;
+  margin-top: 20px;
+}
+
+.ai-food-heading p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.secondary-button,
+.danger-button {
+  min-height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  transition: background 180ms ease, border-color 180ms ease, transform 160ms ease;
+}
+
+.secondary-button:hover {
+  border-color: rgba(229, 35, 42, 0.45);
+  background: rgba(229, 35, 42, 0.1);
+}
+
+.danger-button {
+  color: var(--danger);
+}
+
+.secondary-button:active,
+.danger-button:active {
+  transform: scale(0.975);
+}
+
+.secondary-button:focus-visible,
+.danger-button:focus-visible,
+.natural-log-submit:focus-visible,
+.ai-review-actions .primary-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.ai-food-drafts {
+  display: grid;
+  gap: 10px;
+  margin-top: 11px;
+}
+
+.ai-food-draft {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.ai-food-card-heading strong {
+  font-size: 13px;
+}
+
+.confidence-high {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: var(--text);
+}
+
+.confidence-medium {
+  border-color: rgba(229, 35, 42, 0.38);
+  color: #ffb1b4;
+}
+
+.confidence-low {
+  border-color: rgba(255, 103, 108, 0.5);
+  color: var(--danger);
+}
+
+.ai-food-fields {
+  margin-top: 11px;
+}
+
+.ai-food-fields small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.ai-food-draft > .danger-button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+.ai-unestimated-heading {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.ai-unestimated-draft {
+  border-color: rgba(229, 35, 42, 0.25);
+  background: rgba(229, 35, 42, 0.04);
+}
+
+.ai-unknowns,
+.ai-feedback {
+  margin-top: 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  padding: 11px 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.ai-unknowns strong {
+  color: var(--text);
+}
+
+.ai-unknowns ul {
+  display: grid;
+  gap: 5px;
+  margin: 7px 0 0;
+  padding-left: 18px;
+}
+
+.ai-feedback {
+  color: var(--text);
+}
+
+.ai-review-actions {
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.ai-review-actions button {
+  min-width: 112px;
+}

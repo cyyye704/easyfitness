@@ -244,6 +244,15 @@ export const requestDeepSeekJson = async <T>(
             { retried },
           )
         }
+        if (requestSignal.aborted) {
+          throw new AiServiceError(
+            499,
+            'AI_UPSTREAM_ERROR',
+            '请求已取消。',
+            'client_abort',
+            { retried },
+          )
+        }
         if (attempt === 0) {
           continue
         }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { numberOrNull } from '../profile/formNumbers'
 import {
   activityLabels,
   confidenceLabels,
@@ -17,30 +18,13 @@ import type {
 import { hasProfileDraftContent } from '../profile/validation'
 
 type ProfileDraftReviewProps = {
+  saving?: boolean
   draft: UserProfileDraft
   editing: boolean
   onChange: (draft: UserProfileDraft) => void
   onBack: () => void
   onConfirm: () => void
   onCancelEdit?: () => void
-}
-
-const numberOrNull = (
-  value: string,
-  minimum: number,
-  maximum: number,
-  integer = false,
-) => {
-  if (!value.trim()) {
-    return null
-  }
-  const number = Number(value)
-  return Number.isFinite(number) &&
-    number >= minimum &&
-    number <= maximum &&
-    (!integer || Number.isInteger(number))
-    ? number
-    : null
 }
 
 type NumericInputKey =
@@ -55,6 +39,7 @@ type NumericInputKey =
   | 'bodyFatMax'
 
 export function ProfileDraftReview({
+  saving = false,
   draft,
   editing,
   onChange,
@@ -568,7 +553,7 @@ export function ProfileDraftReview({
           disabled={!hasProfileDraftContent(draft) || hasInvalidNumericInput}
           onClick={onConfirm}
         >
-          {editing ? '保存个人基线' : '确认建立个人基线'}
+          {saving ? '正在保存……' : editing ? '保存个人基线' : '确认建立个人基线'}
         </button>
       </div>
     </div>

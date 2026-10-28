@@ -1,13 +1,39 @@
 import type { FoodTemplate } from './foodUtils.ts'
 import { normalizeMeal, parseFoodValues } from './foodUtils.ts'
+import { createFoodId } from '../utils.ts'
 
 const KEY = 'easyfitness.food-templates.v1'
+const storageKey = (userId?: string) =>
+  userId === undefined ? KEY : `${KEY}.${encodeURIComponent(userId)}`
 const isObject = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 
-export const loadFoodTemplates = (): { templates: FoodTemplate[]; error: string | null; writable: boolean } => {
+// Build a preview only; reading legacy data and saving the result require explicit UI actions.
+export const buildFoodTemplateImport = (
+  current: FoodTemplate[],
+  legacy: FoodTemplate[],
+): { templates: FoodTemplate[]; imported: number; skipped: number } => {
+  const templates = [...current]
+  const names = new Set(current.map((template) => template.name.trim().toLocaleLowerCase()))
+  const ids = new Set([...current, ...legacy].map((template) => template.id))
+  let imported = 0
+  for (const template of legacy) {
+    const name = template.name.trim()
+    const normalizedName = name.toLocaleLowerCase()
+    if (!name || names.has(normalizedName)) continue
+    names.add(normalizedName)
+    let id = createFoodId()
+    while (ids.has(id)) id = createFoodId()
+    ids.add(id)
+    templates.push({ id, name, foods: template.foods.map((food) => ({ ...food })) })
+    imported += 1
+  }
+  return { templates, imported, skipped: legacy.length - imported }
+}
+
+export const loadFoodTemplates = (userId?: string): { templates: FoodTemplate[]; error: string | null; writable: boolean } => {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(storageKey(userId))
     if (!raw) return { templates: [], error: null, writable: true }
     const data: unknown = JSON.parse(raw)
     if (!isObject(data) || data.version !== 1 || !Array.isArray(data.templates)) throw new Error('Invalid templates')
@@ -33,9 +59,9 @@ export const loadFoodTemplates = (): { templates: FoodTemplate[]; error: string 
   }
 }
 
-export const saveFoodTemplates = (templates: FoodTemplate[]): string | null => {
+export const saveFoodTemplates = (templates: FoodTemplate[], userId?: string): string | null => {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ version: 1, templates }))
+    localStorage.setItem(storageKey(userId), JSON.stringify({ version: 1, templates }))
     return null
   } catch {
     return '常用餐食保存失败，请检查浏览器存储权限或剩余空间。'

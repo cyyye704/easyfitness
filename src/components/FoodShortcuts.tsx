@@ -3,8 +3,10 @@ import type { DailyRecord, FoodItem, MealType } from '../types'
 import { createFoodId, summarizeNutrition } from '../utils'
 import { mealLabels, mealTypes, normalizeMeal, scaleFoods } from '../food/foodUtils'
 import type { FoodTemplate } from '../food/foodUtils'
+import { FoodTemplateImport } from './FoodTemplateImport'
 
 type Props = {
+  userId?: string
   record: DailyRecord
   previousRecord?: DailyRecord
   templates: FoodTemplate[]
@@ -12,7 +14,7 @@ type Props = {
   onAdd: (foods: FoodItem[]) => void
 }
 
-export function FoodShortcuts({ record, previousRecord, templates, onSaveTemplates, onAdd }: Props) {
+export function FoodShortcuts({ userId, record, previousRecord, templates, onSaveTemplates, onAdd }: Props) {
   const [servings, setServings] = useState('1')
   const [targetMeal, setTargetMeal] = useState<MealType>('breakfast')
   const [sourceMeal, setSourceMeal] = useState<MealType>('breakfast')
@@ -63,6 +65,7 @@ export function FoodShortcuts({ record, previousRecord, templates, onSaveTemplat
           })}
         </ul>
       )}
+      {userId && <FoodTemplateImport templates={templates} onSaveTemplates={onSaveTemplates} />}
       <details className="template-builder">
         <summary>把所选食物存为模板</summary>
         {record.foods.length ? <form onSubmit={(event) => {

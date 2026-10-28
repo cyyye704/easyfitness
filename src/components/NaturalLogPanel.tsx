@@ -8,12 +8,14 @@ import type { DailyRecord } from '../types'
 import { AiDraftReview } from './AiDraftReview'
 
 type NaturalLogPanelProps = {
+  userId?: string
   activeDate: string
   currentRecord: DailyRecord
   onConfirm: (record: DailyRecord) => void
 }
 
 export function NaturalLogPanel({
+  userId,
   activeDate,
   currentRecord,
   onConfirm,
@@ -78,6 +80,7 @@ export function NaturalLogPanel({
         text.trim(),
         requestedDate,
         controller.signal,
+        userId,
       )
       if (requestIdRef.current !== requestId || activeDate !== requestedDate) {
         return
@@ -116,7 +119,7 @@ export function NaturalLogPanel({
       setText('')
       setDraft(null)
       setError(null)
-      setSuccess('已添加到当天记录，并保存在当前浏览器。')
+      setSuccess('已添加到当天记录。')
     } finally {
       confirmingRef.current = false
       setConfirming(false)
@@ -151,7 +154,7 @@ export function NaturalLogPanel({
       </label>
 
       <div className="natural-log-meta">
-        <p>这段文字会发送给 DeepSeek 用于解析；确认后的正式记录仍只保存在当前浏览器。</p>
+        <p>这段文字会发送给 DeepSeek 用于解析；{userId ? '确认后的记录会保存到你的云端账号。' : '确认后的正式记录只保存在当前浏览器。'}</p>
         <span aria-label={`已输入 ${text.length} 个字符`}>
           {text.length} / {AI_TEXT_MAX_LENGTH}
         </span>

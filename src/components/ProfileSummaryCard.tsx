@@ -6,18 +6,21 @@ import {
 import type { BodyModel, UserProfile } from '../profile/types'
 
 type ProfileSummaryCardProps = {
+  cloud?: boolean
   profile: UserProfile
   model: BodyModel
   onEdit: () => void
-  onClear: () => string | null
+  onClear: () => Promise<string | null> | string | null
 }
 
 export function ProfileSummaryCard({
+  cloud = false,
   profile,
   model,
   onEdit,
   onClear,
 }: ProfileSummaryCardProps) {
+  const [busy, setBusy] = useState(false)
   const [confirmingClear, setConfirmingClear] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -74,19 +77,22 @@ export function ProfileSummaryCard({
           </button>
         ) : (
           <div className="profile-clear-confirm" role="group" aria-label="确认清除个人档案">
-            <p>这只会删除当前浏览器中的个人基线，不会删除每日记录。</p>
+            <p>这只会删除{cloud ? '当前账号云端' : '当前浏览器'}中的个人基线，不会删除每日记录。</p>
             <button
               type="button"
               className="danger-button"
-              onClick={() => {
-                const clearError = onClear()
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true)
+                const clearError = await onClear()
+                setBusy(false)
                 setError(clearError)
                 if (clearError) {
                   setConfirmingClear(false)
                 }
               }}
             >
-              确认清除
+              {busy ? '正在清除……' : '确认清除'}
             </button>
             <button
               type="button"

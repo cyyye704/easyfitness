@@ -57,6 +57,18 @@ const createDraft = (): StoredProfileDraft => ({
   updatedAt: '2026-07-18T00:00:00.000Z',
 })
 
+test('account drafts remain separate from other accounts and the original local draft', () => {
+  installStorage()
+  assert.equal(saveProfileDraft(createDraft()).ok, true)
+  assert.equal(saveProfileDraft({ ...createDraft(), rawText: '账号 A 草稿' }, 'account-a').ok, true)
+  assert.equal(loadProfileDraft('account-b').value, null)
+  assert.equal(loadProfileDraft('account-a').value?.rawText, '账号 A 草稿')
+  assert.equal(loadProfileDraft().value?.rawText, '想减脂')
+  assert.equal(removeProfileDraft('account-a').ok, true)
+  assert.equal(loadProfileDraft('account-a').value, null)
+  assert.equal(loadProfileDraft().value?.rawText, '想减脂')
+})
+
 test('profile and unfinished profile draft save and load independently', () => {
   installStorage()
   const draft = createEmptyProfileDraft()
@@ -128,4 +140,46 @@ test('finishing removes the draft and clearing profile never removes daily recor
   assert.equal(storage.getItem(PROFILE_STORAGE_KEY), null)
   assert.equal(storage.getItem(PROFILE_DRAFT_STORAGE_KEY), null)
   assert.equal(storage.getItem(RECORDS_KEY), '{"version":1,"records":{}}')
+})
+
+test('a failed draft removal leaves the confirmed profile and daily records intact', () => {
+  const storage = installStorage()
+  saveProfile(createUserProfile(createEmptyProfileDraft(), [], []))
+  saveProfileDraft(createDraft())
+  storage.setItem(RECORDS_KEY, 'daily-records')
+  const originalProfile = storage.getItem(PROFILE_STORAGE_KEY)
+  const originalDraft = storage.getItem(PROFILE_DRAFT_STORAGE_KEY)
+  const removedKeys: string[] = []
+  storage.removeItem = (key) => {
+    removedKeys.push(key)
+    if (key === PROFILE_DRAFT_STORAGE_KEY) {
+      throw new Error('Storage unavailable')
+    }
+    storage.data.delete(key)
+  }
+
+  assert.deepEqual(clearProfileData(), { ok: false, error: '无法清除个人档案草稿。' })
+  assert.deepEqual(removedKeys, [PROFILE_DRAFT_STORAGE_KEY])
+  assert.equal(storage.getItem(PROFILE_STORAGE_KEY), originalProfile)
+  assert.equal(storage.getItem(PROFILE_DRAFT_STORAGE_KEY), originalDraft)
+  assert.equal(storage.getItem(RECORDS_KEY), 'daily-records')
+})
+
+test('a failed profile removal preserves the confirmed profile and reports failure', () => {
+  const storage = installStorage()
+  saveProfile(createUserProfile(createEmptyProfileDraft(), [], []))
+  saveProfileDraft(createDraft())
+  storage.setItem(RECORDS_KEY, 'daily-records')
+  const originalProfile = storage.getItem(PROFILE_STORAGE_KEY)
+  storage.removeItem = (key) => {
+    if (key === PROFILE_STORAGE_KEY) {
+      throw new Error('Storage unavailable')
+    }
+    storage.data.delete(key)
+  }
+
+  assert.deepEqual(clearProfileData(), { ok: false, error: '无法清除个人档案。' })
+  assert.equal(storage.getItem(PROFILE_STORAGE_KEY), originalProfile)
+  assert.equal(storage.getItem(PROFILE_DRAFT_STORAGE_KEY), null)
+  assert.equal(storage.getItem(RECORDS_KEY), 'daily-records')
 })

@@ -5,8 +5,10 @@ export const mealLabels: Record<MealType, string> = {
   breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '加餐', unspecified: '未分餐',
 }
 export const mealTypes = Object.keys(mealLabels) as MealType[]
+export const isMealType = (value: unknown): value is MealType =>
+  typeof value === 'string' && mealTypes.includes(value as MealType)
 export const normalizeMeal = (value: unknown): MealType =>
-  mealTypes.includes(value as MealType) ? value as MealType : 'unspecified'
+  isMealType(value) ? value : 'unspecified'
 
 export type FoodValues = Omit<FoodItem, 'id'>
 export type FoodTemplate = { id: string; name: string; foods: FoodValues[] }

@@ -1,15 +1,7 @@
 import type { AiApiErrorBody } from '../ai/types.js'
 import type { UserProfileDraft } from './types.js'
 import { parseProfileApiResponse } from './validation.js'
-
-export class ProfileRequestError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'ProfileRequestError'
-  }
-}
-
-const fallbackMessage = '暂时无法整理个人基线，请稍后再试。'
+import { requestAiJson } from '../ai/request.js'
 
 const errorMessages: Partial<Record<AiApiErrorBody['code'], string>> = {
   INVALID_REQUEST: '个人描述格式不正确，请检查后重试。',
@@ -24,44 +16,21 @@ const errorMessages: Partial<Record<AiApiErrorBody['code'], string>> = {
   AI_CONTENT_REJECTED: '这段内容暂时无法整理，请调整表述后重试。',
 }
 
-export const requestProfileDraft = async (
+export const requestProfileDraft = (
   text: string,
   signal: AbortSignal,
-): Promise<UserProfileDraft> => {
-  let response: Response
-  try {
-    response = await fetch('/api/ai/parse-profile', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text }),
-      signal,
-    })
-  } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw error
-    }
-    throw new ProfileRequestError('无法连接个人档案服务，请检查网络后重试。')
-  }
-
-  let payload: unknown
-  try {
-    payload = await response.json()
-  } catch {
-    throw new ProfileRequestError(fallbackMessage)
-  }
-
-  if (!response.ok) {
-    const apiError = payload as Partial<AiApiErrorBody>
-    throw new ProfileRequestError(
-      typeof apiError.code === 'string' && apiError.code in errorMessages
-        ? errorMessages[apiError.code as AiApiErrorBody['code']] ?? fallbackMessage
-        : fallbackMessage,
-    )
-  }
-
-  try {
-    return parseProfileApiResponse(payload)
-  } catch {
-    throw new ProfileRequestError('个人档案整理结果格式异常，请重新整理。')
-  }
-}
+  userId?: string,
+): Promise<UserProfileDraft> =>
+  requestAiJson({
+    endpoint: '/api/ai/parse-profile',
+    body: { text },
+    signal,
+    userId,
+    parseResponse: parseProfileApiResponse,
+    messages: {
+      network: '无法连接个人档案服务，请检查网络后重试。',
+      fallback: '暂时无法整理个人基线，请稍后再试。',
+      invalidResponse: '个人档案整理结果格式异常，请重新整理。',
+      codes: errorMessages,
+    },
+  })

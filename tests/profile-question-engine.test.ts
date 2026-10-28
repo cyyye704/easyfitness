@@ -3,9 +3,39 @@ import test from 'node:test'
 import {
   getNextProfileQuestionId,
   getPreviousProfileQuestionId,
+  recordProfileQuestionAnswer,
   selectProfileQuestionIds,
 } from '../src/profile/questionEngine.ts'
 import { createEmptyProfileDraft } from '../src/profile/validation.ts'
+
+test('changing an answered question to skipped removes the old answer', () => {
+  const answered = ['heightCm', 'healthLimitations'] as const
+  const skipped = ['age'] as const
+  assert.deepEqual(
+    recordProfileQuestionAnswer('healthLimitations', 'skipped', [...answered], [...skipped]),
+    {
+      answeredQuestionIds: ['heightCm'],
+      skippedQuestionIds: ['age', 'healthLimitations'],
+    },
+  )
+})
+
+test('answering a skipped question clears its skipped state and is idempotent', () => {
+  const first = recordProfileQuestionAnswer('heightCm', 'answered', ['age'], ['heightCm'])
+  assert.deepEqual(first, {
+    answeredQuestionIds: ['age', 'heightCm'],
+    skippedQuestionIds: [],
+  })
+  assert.deepEqual(
+    recordProfileQuestionAnswer(
+      'heightCm',
+      'answered',
+      first.answeredQuestionIds,
+      first.skippedQuestionIds,
+    ),
+    first,
+  )
+})
 
 test('missing core profile fields are asked in deterministic priority order', () => {
   const ids = selectProfileQuestionIds(createEmptyProfileDraft())

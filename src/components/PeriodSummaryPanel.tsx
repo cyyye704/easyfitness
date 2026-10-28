@@ -10,6 +10,7 @@ import type { DailyRecord } from '../types'
 import { WeightTrend } from './WeightTrend'
 
 type PeriodSummaryPanelProps = {
+  userId?: string
   records: Record<string, DailyRecord>
   defaultEndDate: string
 }
@@ -27,6 +28,7 @@ const formatWeightChange = (change: number | null) => {
 }
 
 export function PeriodSummaryPanel({
+  userId,
   records,
   defaultEndDate,
 }: PeriodSummaryPanelProps) {
@@ -57,6 +59,19 @@ export function PeriodSummaryPanel({
   )
   const metricsKey = metrics ? JSON.stringify(metrics) : ''
   const aiSummary = generated?.metricsKey === metricsKey ? generated.summary : null
+  const previousMetricsKeyRef = useRef(metricsKey)
+
+  useEffect(() => {
+    if (previousMetricsKeyRef.current === metricsKey) {
+      return
+    }
+    previousMetricsKeyRef.current = metricsKey
+    requestIdRef.current += 1
+    controllerRef.current?.abort()
+    controllerRef.current = null
+    setLoading(false)
+    setError(null)
+  }, [metricsKey])
 
   const stopCurrentRequest = () => {
     requestIdRef.current += 1
@@ -93,7 +108,7 @@ export function PeriodSummaryPanel({
     setLoading(true)
     setError(null)
     try {
-      const summary = await requestPeriodAiSummary(metrics, controller.signal)
+      const summary = await requestPeriodAiSummary(metrics, controller.signal, userId)
       if (requestIdRef.current !== requestId) {
         return
       }
@@ -290,7 +305,7 @@ export function PeriodSummaryPanel({
               </button>
             </div>
             <p className="period-ai-privacy">
-              点击后只发送上方聚合指标，不发送食物名称、原始备注或完整本地记录。
+              点击后只发送上方聚合指标，不发送食物名称、原始备注或完整记录。
             </p>
 
             <div className="ai-status-region" aria-live="polite" aria-atomic="true">
