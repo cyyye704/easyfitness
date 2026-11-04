@@ -13,6 +13,48 @@
 
 给朋友使用前，先完成第 5 节的 SMTP 配置，再按第 8 节验证真实邮箱与账号流程。不要通过关闭邮箱验证绕过邮件配置。
 
+### 实际使用与 SMTP 验收补记（2026-11-04）
+
+- 2026-10-29 已完成真实邮箱注册、确认和登录；通过临时训练备注保存、刷新后读取、再清空，验证了登录后的云端保存。用户反馈登录后的 AI 草稿解析可用。
+- 已在 Supabase 保存并启用 Brevo 自定义 SMTP，邮箱验证保持开启，发件人名称为 `EasyFitness`。SMTP key 只填写在 Supabase 的 SMTP Password 配置中，不写入仓库或应用环境变量。
+- 从正式站点的独立 InPrivate 会话发起找回密码；2026-11-04 15:39:56（UTC+8）确认 Outlook 收到主题为 `Reset your password` 的新邮件。
+- 在同一 InPrivate 会话打开该邮件链接，成功进入“设置新密码”表单，无回调错误。测试未填写或提交新密码；关闭测试窗口后，原账号仍保持登录，页面显示记录已保存到云端。
+- 当前没有自有发件域名，实际发件地址被 Brevo 改写到 `brevosend.com`；邮件链接仍经 Brevo 跟踪包装。本次恢复链接可用，不代表所有邮箱投递表现均已验证。
+- 尚待验证：非项目团队邮箱的新用户注册与确认，以及由用户实际提交新密码。上述结果补充并更新 2026-10-28 部署记录中的待验收状态。
+
+### 游客模式与邮件提示发布（2026-11-04）
+
+- 已发布到 [正式站点](https://easyfitness-phi.vercel.app/)，部署为 `dpl_AjmnoPtz2Vpk79CRQLpjrshN7o3L`，版本地址为 `https://easyfitness-nw5zs4mio-cyyue.vercel.app`。
+- 发布副本基于 `43904e5`，只包含游客入口、保存后返回登录、游客 AI 限制和垃圾邮件提示；开发中的 COROS 改动保留在工作区，本次未发布，无数据库或环境变量变更。
+- 发布副本通过 193 项自动测试、lint 和生产构建。发布前浏览器已验证游客保存、刷新恢复、返回登录再进入游客后记录保留。
+- 发布后已确认首页和资源返回 200，新入口及邮件提示存在于正式构建，浏览器可进入游客工作区并编辑记录；未登录调用 AI 返回 `401 AUTH_REQUIRED`。线上刷新验收时电脑控制连接中断，未将该次刷新计为已验证。
+
+### 自定义域名接入（2026-11-04）
+
+- 主网址改为 [https://easyfitness.top/](https://easyfitness.top/)，域名在腾讯云注册，DNS 继续使用 DNSPod；绑定 Vercel 的 `cyyue/easyfitness` 项目，无应用重新部署或数据库变更。
+- DNS 按 Vercel 当次验证返回的推荐值配置：`@ A 216.198.79.1`、`@ A 64.29.17.1`、`www CNAME c938f930aa024da6.vercel-dns-017.com`，默认线路，TTL 600。以后调整时以 Vercel 实时建议为准。
+- 两个域名均通过 Vercel 验证并签发可自动续期的 HTTPS 证书。主网址实际返回 200；`www.easyfitness.top` 以 308 跳转主网址，并保留路径和查询参数。
+- Supabase Site URL 已改为 `https://easyfitness.top/`；新增主域名和 www 各自的根地址、`/?auth=recovery` 共四条精确回调，原 Vercel 和 localhost 回调保留。保存后已重新加载确认。
+- 从新域名的独立 InPrivate 会话发起找回密码，16:35:39（UTC+8）收到邮件；在同一会话打开实际邮件链接，成功进入新域名的“设置新密码”表单，无回调错误。本次未填写或提交新密码。
+- 新旧网址使用同一 Supabase 项目和账号，已保存云端数据不迁移。浏览器本地记录按域名隔离，旧网址游客数据需在旧网址登录并复核导入后，才能从新网址读取。
+- 本次配置网站和认证回调；Brevo 继续使用已验证的现有发件人，尚未配置新域名发信认证。
+
+### 包含 COROS 的最新版发布（2026-11-04）
+
+- 已发布到 [easyfitness.top](https://easyfitness.top/)，部署为 `dpl_DwJZmtoWpqzcjGqkyjFkzq4U6P9S`，版本地址为 `https://easyfitness-q2pe0v1xm-cyyue.vercel.app`。三个旧 Vercel 别名均已更新，www 保持 308 跳转。
+- 已执行 COROS 迁移，并通过事务内随机账号验证字段约束、已有字段保留、账号隔离、版本冲突和匿名访问拒绝，测试数据全部回滚。Production 的 COROS 服务端 origin 与加密密钥已配置。
+- 245 项自动测试、lint、本地及远端生产构建通过；线上资源、未登录接口拒绝和登录后的 COROS 入口已验证。用户要求先发布，真实 COROS 授权及健康数据导入尚未联调，详见 [COROS 发布记录](coros-setup.md)。
+- 本次使用独立发布副本，没有提交、推送或清理用户工作区。
+
+### 侧边栏与训练频次修复发布（2026-11-04）
+
+- 用户确认发布后，已部署到 [easyfitness.top](https://easyfitness.top/)，部署为 `dpl_D3Mb4BvdGJck3QUftq8L12WH3QvB`，版本地址为 `https://easyfitness-ko5e2st9j-cyyue.vercel.app`。
+- 本版包含桌面侧边栏、手机抽屉菜单、简洁首页、切换模块保留草稿、训练频次小数确认修复，以及装饰英文清理。离开手表模块会取消等待中的连接跳转。
+- 无新增数据库迁移或环境变量。原有云端数据、RLS 和 COROS 服务端配置沿用；真实 COROS 账号数据联调仍按上一版记录待验证。
+- 248 项测试、lint、生产构建通过；发布前完成桌面、390/320 像素手机布局、菜单关闭、站内返回保留输入、记录刷新恢复和 COROS 回调路由检查。
+- 发布后首页及新版静态资源返回 200，登录状态与云端读取正常，侧边栏在“每日记录”和首页之间切换正常；COROS 与三个 AI 接口均拒绝未登录请求。www 仍以 308 跳转主域名并保留查询参数，三个旧 Vercel 别名已更新。
+- 独立发布副本上传，未提交或推送 Git，用户工作区保持原样。上一部署 `dpl_DwJZmtoWpqzcjGqkyjFkzq4U6P9S` 保留用于应用回滚。
+
 ## 1. 建立 Supabase 项目并取得公开配置
 
 在 [Supabase Dashboard](https://supabase.com/dashboard) 新建项目，等待数据库就绪。在项目 Connect 面板或 Settings → API Keys 中取得：
@@ -28,8 +70,9 @@
 
 1. [202610280001_workspace.sql](../supabase/migrations/202610280001_workspace.sql)：建立数据表、RLS、版本序列和触发器。
 2. [202610280002_record_features.sql](../supabase/migrations/202610280002_record_features.sql)：为每日记录增加训练状态与营养记录完整性的约束。
+3. [202611040001_coros_records.sql](../supabase/migrations/202611040001_coros_records.sql)：校验可选的 COROS 睡眠和活动热量字段，并防止旧客户端更新时删除已有来源数据。连接配置见 [COROS 接入说明](coros-setup.md)。
 
-如果项目已经成功执行 001，本次只需补执行 002，不必删表、重建项目或再次导入数据。后续新增迁移继续按 `supabase/migrations/` 文件名顺序执行，不要只建表而跳过策略或触发器。
+如果项目已经成功执行早期迁移，只需按顺序补执行尚未执行的迁移，不必删表、重建项目或再次导入数据。后续新增迁移继续按 `supabase/migrations/` 文件名顺序执行，不要只建表而跳过策略或触发器。
 
 001 创建：
 
@@ -42,13 +85,15 @@
 
 002 不重写旧 JSON，也不修改已有行的版本号或 RLS。缺少新字段的旧记录继续有效，前端按“训练未确认、营养未完整记录”读取。新记录的 `trainingStatus` 只接受 `unrecorded`、`trained`、`rest`；`nutritionComplete` 必须是布尔值，存在未估算饮食时不能为 `true`。食物的 `meal` 标签仍作为 JSON 字段保存，由应用校验；旧食物没有标签时按未分类读取。
 
-执行两个迁移后，在测试项目运行 [workspace.sql](../supabase/tests/workspace.sql)，验证账号隔离、跨账号写入拒绝、版本冲突与新旧记录字段兼容。该脚本在事务里创建测试数据，结束时回滚；版本序列可能消耗编号，这是正常行为。如果已有同名表和自定义策略，先审查现有结构；迁移中的 `if not exists` 不会自动修复任意旧表或删除其他开放策略。
+执行全部迁移后，在测试项目运行 [workspace.sql](../supabase/tests/workspace.sql)，验证账号隔离、跨账号写入拒绝、版本冲突与新旧记录字段兼容。该脚本在事务里创建测试数据，结束时回滚；版本序列可能消耗编号，这是正常行为。如果已有同名表和自定义策略，先审查现有结构；迁移中的 `if not exists` 不会自动修复任意旧表或删除其他开放策略。
 
 ## 3. 开启邮箱注册、登录和验证
 
 进入 Authentication 的 Email Provider 设置，启用邮箱与密码登录，开启允许新用户注册，并保持 Confirm email / 邮箱验证开启。不要开启匿名登录；本应用 AI 接口拒绝匿名用户。[官方邮箱密码说明](https://supabase.com/docs/guides/auth/passwords) 解释了注册与确认流程。
 
 注册成功后，用户需要点击确认邮件；忘记密码通过邮件进入应用中的新密码表单。默认邮件模板保留 `{{ .ConfirmationURL }}` 链接即可，本项目不提供 `/auth/confirm` 服务端路由，不要直接套用其他框架的回调模板。
+
+注册、找回密码和重发确认后的提示均提醒检查收件箱与垃圾邮件。登录页支持“暂不登录，先使用”：游客记录保存在当前浏览器，AI 功能仍需登录；登录后通过“导入本机旧记录”复核并确认导入，不会自动上传。
 
 本应用使用 PKCE。确认和重置链接应在发起流程的同一浏览器、同一站点环境打开；不要从 localhost 发起后在另一台设备或生产域名完成交换。跨浏览器、已使用或过期的链接可能需要重新发起流程，见 [PKCE 官方说明](https://supabase.com/docs/guides/auth/sessions/pkce-flow)。
 

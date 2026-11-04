@@ -114,9 +114,9 @@ export function ProfileDraftReview({
     numericInputs.waistCm.trim() &&
       numberOrNull(numericInputs.waistCm, 30, 250) === null,
     numericInputs.strengthSessionsPerWeek.trim() &&
-      numberOrNull(numericInputs.strengthSessionsPerWeek, 0, 14, true) === null,
+      numberOrNull(numericInputs.strengthSessionsPerWeek, 0, 14) === null,
     numericInputs.cardioSessionsPerWeek.trim() &&
-      numberOrNull(numericInputs.cardioSessionsPerWeek, 0, 14, true) === null,
+      numberOrNull(numericInputs.cardioSessionsPerWeek, 0, 14) === null,
     numericInputs.averageSleepHours.trim() &&
       numberOrNull(numericInputs.averageSleepHours, 0, 24) === null,
     estimate && numberOrNull(numericInputs.bodyFatMin, 1, 70) === null,
@@ -127,12 +127,12 @@ export function ProfileDraftReview({
   return (
     <div className="profile-review" aria-labelledby="profile-review-title">
       <div className="section-heading">
-        <span className="eyebrow">Profile / Review</span>
         <h2 id="profile-review-title">
           {editing ? '查看与修改个人基线' : '检查个人基线草稿'}
         </h2>
         <p className="section-description">
           这里只保存你确认过的事实。AI 估计会单独标注，不会伪装成测量结果。
+          训练次数不固定时可填平均值，例如每周 3～4 次可填 3.5。
         </p>
       </div>
 
@@ -272,20 +272,19 @@ export function ProfileDraftReview({
           </select>
         </label>
         <label>
-          <span>每周力量训练次数</span>
+          <span>每周力量训练平均次数</span>
           <input
             type="number"
             min="0"
             max="14"
-            step="1"
-            inputMode="numeric"
+            step="any"
+            inputMode="decimal"
             aria-invalid={
               Boolean(numericInputs.strengthSessionsPerWeek.trim()) &&
               numberOrNull(
                 numericInputs.strengthSessionsPerWeek,
                 0,
                 14,
-                true,
               ) === null
             }
             value={numericInputs.strengthSessionsPerWeek}
@@ -295,26 +294,24 @@ export function ProfileDraftReview({
                 event.target.value,
                 0,
                 14,
-                true,
               )
             }
           />
         </label>
         <label>
-          <span>每周有氧训练次数</span>
+          <span>每周有氧训练平均次数</span>
           <input
             type="number"
             min="0"
             max="14"
-            step="1"
-            inputMode="numeric"
+            step="any"
+            inputMode="decimal"
             aria-invalid={
               Boolean(numericInputs.cardioSessionsPerWeek.trim()) &&
               numberOrNull(
                 numericInputs.cardioSessionsPerWeek,
                 0,
                 14,
-                true,
               ) === null
             }
             value={numericInputs.cardioSessionsPerWeek}
@@ -324,7 +321,6 @@ export function ProfileDraftReview({
                 event.target.value,
                 0,
                 14,
-                true,
               )
             }
           />

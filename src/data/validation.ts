@@ -1,6 +1,6 @@
 import type { UserProfile } from '../profile/types.js'
 import { normalizeUserProfile } from '../profile/validation.js'
-import type { DailyRecord, FoodItem, TrainingStatus } from '../types.js'
+import type { CorosDailyData, DailyRecord, FoodItem, TrainingStatus } from '../types.js'
 import { isMealType, normalizeMeal } from '../food/foodUtils.js'
 import { isDateKey } from '../utils.js'
 import { CloudDataError } from './types.js'
@@ -31,6 +31,31 @@ export const validateRevision = (value: unknown): number => {
     return invalid()
   }
   return value as number
+}
+
+export const parseCorosDailyData = (value: unknown, expectedDate: string): CorosDailyData => {
+  if (
+    !isObject(value) ||
+    Object.keys(value).length !== 4 ||
+    !isText(value.sourceDate) ||
+    !isDateKey(value.sourceDate) ||
+    value.sourceDate !== expectedDate ||
+    !isNullableNumber(value.sleepHours, 24) ||
+    !isNullableNumber(value.activeCaloriesKcal, 30_000) ||
+    (value.sleepHours === null && value.activeCaloriesKcal === null) ||
+    !isText(value.syncedAt) ||
+    !/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d{1,3})?Z$/.test(value.syncedAt) ||
+    !isDateKey(value.syncedAt.slice(0, 10)) ||
+    !Number.isFinite(Date.parse(value.syncedAt))
+  ) {
+    return invalid()
+  }
+  return {
+    sourceDate: value.sourceDate,
+    sleepHours: value.sleepHours as number | null,
+    activeCaloriesKcal: value.activeCaloriesKcal as number | null,
+    syncedAt: value.syncedAt,
+  }
 }
 
 export const parseDailyRecord = (value: unknown, expectedDate?: string): DailyRecord => {
@@ -99,6 +124,7 @@ export const parseDailyRecord = (value: unknown, expectedDate?: string): DailyRe
     nutritionComplete: value.nutritionComplete === true,
     foods,
     unestimatedMeals,
+    ...(value.coros === undefined ? {} : { coros: parseCorosDailyData(value.coros, value.date) }),
   }
 }
 

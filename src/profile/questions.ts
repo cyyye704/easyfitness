@@ -44,7 +44,8 @@ export const profileQuestions: ProfileQuestion[] = [
   {
     id: 'trainingFrequency',
     priority: 70,
-    title: '你通常每周训练几次？',
+    title: '你平均每周训练几次？',
+    description: '次数不固定时可填平均值，例如每周 3～4 次可填 3.5。',
     shouldAsk: (draft) =>
       draft.facts.strengthSessionsPerWeek === null &&
       draft.facts.cardioSessionsPerWeek === null,

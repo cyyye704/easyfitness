@@ -8,6 +8,7 @@ const projectRoot = resolve('.')
 const entryFiles = readdirSync(resolve('api/ai'))
   .filter((file) => file.endsWith('.ts'))
   .map((file) => `api/ai/${file}`)
+entryFiles.push('api/coros.ts')
 
 const configPath = resolve('tsconfig.json')
 const config = ts.readConfigFile(configPath, ts.sys.readFile)
@@ -66,9 +67,9 @@ test('Vercel entry graph typechecks with the root tsconfig options', () => {
   )
 })
 
-test('all AI functions allow time for authentication and the upstream request', () => {
+test('functions allow time for authentication and their upstream requests', () => {
   const config = JSON.parse(readFileSync(resolve('vercel.json'), 'utf8'))
   for (const file of entryFiles) {
-    assert.equal(config.functions[file]?.maxDuration, 35, file)
+    assert.equal(config.functions[file]?.maxDuration, file === 'api/coros.ts' ? 60 : 35, file)
   }
 })

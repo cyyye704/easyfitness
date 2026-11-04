@@ -7,7 +7,7 @@ import { createCloudRepository } from '../src/data/repository.ts'
 import { CloudDataError } from '../src/data/types.ts'
 import { loadFoodTemplates, saveFoodTemplates } from '../src/food/templateStorage.ts'
 import { loadRecords, saveRecords } from '../src/storage.ts'
-import { createEmptyRecord, evaluateRecord } from '../src/utils.ts'
+import { createEmptyRecord, evaluateRecord, hasRecordContent, summarizeNutrition } from '../src/utils.ts'
 import { calculatePeriodSummary } from '../src/periodSummary/calculatePeriodSummary.ts'
 import { calculateWeightTrend } from '../src/periodSummary/weightTrend.ts'
 import { mergeAiDraft } from '../src/ai/mergeAiDraft.ts'
@@ -166,4 +166,97 @@ test('AI merges preserve existing meal labels and reset only affected confirmati
   assert.equal(normalized.trainingStatus, 'unrecorded')
   assert.equal(normalized.foods[0].meal, 'unspecified')
   assert.equal(normalized.foods[1].meal, 'lunch')
+})
+
+const coros = {
+  sourceDate: date,
+  sleepHours: 7.53,
+  activeCaloriesKcal: 456.7,
+  syncedAt: '2026-11-04T08:15:30.123Z',
+}
+
+test('COROS data survives local reload and confirmed import without changing sleep or food calories', (t) => {
+  installStorage(t)
+  const imported = { ...confirmed, coros }
+  assert.equal(saveRecords({ [date]: imported }).ok, true)
+  const local = loadRecords()
+  assert.equal(local.warning, null)
+  assert.deepEqual(local.records[date], imported)
+  const writes = getImportWrites(buildImportPlan(local.records, null, { records: {}, profile: null }))
+  assert.deepEqual(parseDailyRecord(writes.records[0].record), imported)
+  assert.equal(local.records[date].sleepHours, 8)
+  assert.equal(summarizeNutrition(local.records[date].foods).totalCalories, 1500)
+  assert.equal(hasRecordContent({ ...createEmptyRecord(date), coros: { ...coros, sleepHours: null, activeCaloriesKcal: 0 } }), true)
+})
+
+test('COROS-only changes remain import conflicts and default to the cloud version', () => {
+  const local = { ...confirmed, coros }
+  const cloud = { ...confirmed, coros: { ...coros, activeCaloriesKcal: 700 } }
+  const plan = buildImportPlan({ [date]: local }, null, {
+    records: { [date]: { data: cloud, revision: 5 } }, profile: null,
+  })
+  assert.equal(plan.records[0].status, 'conflict')
+  assert.deepEqual(getImportWrites(plan).records, [])
+  assert.deepEqual(getImportWrites(plan, { recordDates: [date] }).records, [{ record: local, expectedRevision: 5 }])
+})
+
+test('malformed or unsupported COROS blocks are rejected rather than silently stripped', () => {
+  const badBlocks = [
+    null, [], {},
+    { ...coros, sourceDate: '2026-10-29' },
+    { ...coros, sourceDate: '2026-02-30' },
+    { ...coros, sleepHours: -1 },
+    { ...coros, sleepHours: 25 },
+    { ...coros, sleepHours: '8' },
+    { ...coros, activeCaloriesKcal: -1 },
+    { ...coros, activeCaloriesKcal: 30_001 },
+    { ...coros, activeCaloriesKcal: Infinity },
+    { ...coros, sleepHours: null, activeCaloriesKcal: null },
+    { ...coros, syncedAt: 'yesterday' },
+    { ...coros, syncedAt: '2026-02-30T00:00:00Z' },
+    { ...coros, syncedAt: '2026-11-04T24:00:00Z' },
+    { ...coros, futureField: 123 },
+  ]
+  for (const block of badBlocks) {
+    assert.throws(() => parseDailyRecord({ ...confirmed, coros: block }), CloudDataError)
+  }
+  assert.equal('coros' in parseDailyRecord(confirmed), false)
+  assert.deepEqual(parseDailyRecord({ ...confirmed, coros: { ...coros, sleepHours: null } }).coros, { ...coros, sleepHours: null })
+  assert.deepEqual(parseDailyRecord({ ...confirmed, coros: { ...coros, activeCaloriesKcal: null } }).coros, { ...coros, activeCaloriesKcal: null })
+})
+
+test('unreadable local COROS data blocks subsequent overwrites and keeps its original bytes', (t) => {
+  const values = installStorage(t)
+  const raw = JSON.stringify({ version: 1, records: {
+    [date]: { ...confirmed, coros: { ...coros, futureField: 123 } },
+  } })
+  values.set('easyfitness.records.v1', raw)
+  const loaded = loadRecords()
+  assert.deepEqual(loaded.records, {})
+  assert.match(loaded.warning ?? '', /COROS.*未覆盖/)
+  const saved = saveRecords({ [date]: confirmed })
+  assert.equal(saved.ok, false)
+  assert.match(saved.error ?? '', /COROS.*未覆盖/)
+  assert.equal(values.get('easyfitness.records.v1'), raw)
+})
+
+test('an outdated local snapshot cannot silently drop existing COROS fields', (t) => {
+  const values = installStorage(t)
+  const raw = JSON.stringify({ version: 1, records: { [date]: { ...confirmed, coros } } })
+  values.set('easyfitness.records.v1', raw)
+  assert.equal(saveRecords({ [date]: confirmed }).ok, false)
+  assert.equal(saveRecords({}).ok, false)
+  assert.equal(values.get('easyfitness.records.v1'), raw)
+  assert.equal(saveRecords({ [date]: { ...confirmed, weightKg: 69, coros } }).ok, true)
+  assert.equal(loadRecords().records[date].weightKg, 69)
+})
+
+test('an unrelated AI edit preserves COROS source data', () => {
+  const draft: AiDailyDraft = {
+    date, weightKg: 69, sleepHours: 9, training: '', foods: [], unestimatedMeals: [],
+    unknowns: [], feedback: '',
+  }
+  const merged = mergeAiDraft({ ...confirmed, coros }, draft, { replaceWeight: true, replaceSleep: true })
+  assert.equal(merged.sleepHours, 9)
+  assert.deepEqual(parseDailyRecord(merged).coros, coros)
 })

@@ -138,6 +138,7 @@ export function ProfileOnboarding({
   }
 
   const submitNaturalText = async () => {
+    if (!userId) return
     const inputError = getProfileInputError(flow.rawText)
     if (inputError || flow.stage === 'parsing') {
       setError(inputError)
@@ -258,7 +259,6 @@ export function ProfileOnboarding({
       {(flow.stage === 'intro' || flow.stage === 'parsing') && (
         <div className="profile-intro">
           <div className="section-heading">
-            <span className="eyebrow">Profile / Baseline</span>
             <h2 id="profile-title">先让我了解你</h2>
             <p className="section-description">
               不用按格式填写。说说你的年龄、身高体重、运动习惯，以及你最想改变什么。
@@ -269,7 +269,7 @@ export function ProfileOnboarding({
             <textarea
               rows={7}
               maxLength={PROFILE_TEXT_MAX_LENGTH}
-              disabled={flow.stage === 'parsing'}
+              disabled={!userId || flow.stage === 'parsing'}
               value={flow.rawText}
               placeholder="例如：我20岁，172厘米，78公斤，一周练三四次，平时久坐，最近主要想减脂……"
               onChange={(event) => {
@@ -283,7 +283,9 @@ export function ProfileOnboarding({
           </label>
           <div className="profile-input-meta">
             <p>
-              这段文字会发送给 DeepSeek 用于整理。{userId ? '确认后的档案保存在你的云端账号；未确认草稿只留在本机。' : '确认后的个人档案只保存在当前浏览器。'}
+              {userId
+                ? '这段文字会发送给 DeepSeek 用于整理。确认后的档案保存在你的云端账号；未确认草稿只留在本机。'
+                : '登录后可使用 AI 建立个人基线。你可以先跳过，使用手动记录功能。'}
             </p>
             <span>{flow.rawText.length} / {PROFILE_TEXT_MAX_LENGTH}</span>
           </div>
@@ -291,7 +293,7 @@ export function ProfileOnboarding({
             <button
               type="button"
               className="primary-button"
-              disabled={flow.stage === 'parsing' || Boolean(getProfileInputError(flow.rawText))}
+              disabled={!userId || flow.stage === 'parsing' || Boolean(getProfileInputError(flow.rawText))}
               onClick={submitNaturalText}
             >
               {flow.stage === 'parsing'

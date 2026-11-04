@@ -94,7 +94,7 @@ export function PeriodSummaryPanel({
   }
 
   const generateSummary = async () => {
-    if (!metrics || metrics.coverage.recordedDays === 0 || loading) {
+    if (!userId || !metrics || metrics.coverage.recordedDays === 0 || loading) {
       return
     }
 
@@ -134,7 +134,6 @@ export function PeriodSummaryPanel({
     <section className="panel period-summary-panel" aria-labelledby="period-title">
       <div className="section-heading period-summary-heading">
         <div>
-          <span className="eyebrow">Review / Period</span>
           <h2 id="period-title">阶段总结</h2>
           <p className="section-description">
             先由浏览器计算可靠指标，再按需让 AI 整理成一段克制的小结。
@@ -292,20 +291,21 @@ export function PeriodSummaryPanel({
           <div className="period-ai-block">
             <div className="period-ai-heading">
               <div>
-                <span className="eyebrow">AI / Summary</span>
                 <h3>阶段小结</h3>
               </div>
               <button
                 type="button"
                 className="primary-button"
-                disabled={loading || metrics.coverage.recordedDays === 0}
+                disabled={!userId || loading || metrics.coverage.recordedDays === 0}
                 onClick={generateSummary}
               >
                 {loading ? '正在生成……' : aiSummary ? '重新生成' : '生成阶段小结'}
               </button>
             </div>
             <p className="period-ai-privacy">
-              点击后只发送上方聚合指标，不发送食物名称、原始备注或完整记录。
+              {userId
+                ? '点击后只发送上方聚合指标，不发送食物名称、原始备注或完整记录。'
+                : '登录后可生成 AI 阶段小结。上方统计在当前浏览器计算，无需登录即可查看。'}
             </p>
 
             <div className="ai-status-region" aria-live="polite" aria-atomic="true">

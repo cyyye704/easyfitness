@@ -41,6 +41,7 @@ export type UserProfileFacts = {
   primaryGoal: PrimaryGoal
   activityLevel: ActivityLevel
   trainingExperience: TrainingExperience
+  // Average weekly sessions may be fractional when the user describes a range.
   strengthSessionsPerWeek: number | null
   cardioSessionsPerWeek: number | null
   averageSleepHours: number | null

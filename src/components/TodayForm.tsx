@@ -22,7 +22,6 @@ export function TodayForm({ record, onChange }: TodayFormProps) {
   return (
     <section className="panel" aria-labelledby="today-form-title">
       <div className="section-heading">
-        <span className="eyebrow">Log</span>
         <h2 id="today-form-title">今日记录</h2>
       </div>
 

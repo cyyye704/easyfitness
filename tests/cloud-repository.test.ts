@@ -167,3 +167,49 @@ test('aborted requests preserve cancellation and pre-aborted requests never reac
   })
   await assert.rejects(aborted.repository.saveRecord(record, null, controller.signal), { name: 'AbortError' })
 })
+
+test('cloud reads and writes preserve COROS source values independently of confirmed sleep', async () => {
+  const deviceRecord = { ...record, sleepHours: 8, coros: {
+    sourceDate: record.date, sleepHours: 7.53, activeCaloriesKcal: 510.5,
+    syncedAt: '2026-11-04T09:00:00.000Z',
+  } }
+  const { repository } = makeRepository(({ url, init }) => {
+    if (init.method === 'POST' || init.method === 'PATCH') {
+      const body = JSON.parse(String(init.body))
+      assert.deepEqual(body.data, deviceRecord)
+      return Response.json([{ user_id: userId, date: record.date, data: body.data, revision: 3 }])
+    }
+    return Response.json(url.pathname.endsWith('/daily_records') && !url.searchParams.has('date')
+      ? [{ user_id: userId, date: record.date, data: deviceRecord, revision: 2 }] : [])
+  })
+  assert.deepEqual((await repository.load()).records[record.date].data, deviceRecord)
+  assert.deepEqual((await repository.saveRecord(deviceRecord, 2)).data, deviceRecord)
+})
+
+test('cloud writes never report success when the response drops or changes COROS fields', async () => {
+  const coros = {
+    sourceDate: record.date, sleepHours: null, activeCaloriesKcal: 510,
+    syncedAt: '2026-11-04T09:00:00Z',
+  }
+  for (const saved of [record, { ...record, coros: { ...coros, activeCaloriesKcal: 0 } }]) {
+    const { repository, requests } = makeRepository(() =>
+      Response.json([{ user_id: userId, date: record.date, data: saved, revision: 3 }]),
+    )
+    await assert.rejects(repository.saveRecord({ ...record, coros }, 2), hasKind('invalid'))
+    assert.equal(requests.length, 1)
+  }
+})
+
+test('invalid COROS cloud data fails loading and is rejected before any write request', async () => {
+  const badRecord = { ...record, coros: {
+    sourceDate: record.date, sleepHours: null, activeCaloriesKcal: 30_001,
+    syncedAt: '2026-11-04T09:00:00Z',
+  } }
+  const { repository, requests } = makeRepository(({ url }) =>
+    Response.json(url.pathname.endsWith('/daily_records')
+      ? [{ user_id: userId, date: record.date, data: badRecord, revision: 2 }] : []),
+  )
+  await assert.rejects(repository.saveRecord(badRecord, null), hasKind('invalid'))
+  assert.equal(requests.length, 0)
+  await assert.rejects(repository.load(), hasKind('invalid'))
+})

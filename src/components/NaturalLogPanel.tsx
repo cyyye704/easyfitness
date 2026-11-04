@@ -56,6 +56,7 @@ export function NaturalLogPanel({
   )
 
   const submit = async () => {
+    if (!userId) return
     const inputError = getNaturalLogInputError(text, activeDate)
     if (inputError || loadingRef.current) {
       setError(inputError)
@@ -129,7 +130,6 @@ export function NaturalLogPanel({
   return (
     <section className="panel natural-log-panel" aria-labelledby="natural-log-title">
       <div className="section-heading ai-panel-heading">
-        <span className="eyebrow">AI / Natural Log</span>
         <h2 id="natural-log-title">把今天说出来</h2>
         <p className="section-description">
           不用整理格式。说说吃了什么、练了什么、睡得怎么样，剩下的交给 EasyFitness。
@@ -143,7 +143,7 @@ export function NaturalLogPanel({
           rows={5}
           value={text}
           maxLength={AI_TEXT_MAX_LENGTH}
-          disabled={loading}
+          disabled={!userId || loading}
           placeholder="例如：中午食堂吃了半碗米饭和宫保鸡丁，晚上练胸，昨晚睡了七个半小时……"
           onChange={(event) => {
             setText(event.target.value)
@@ -154,7 +154,9 @@ export function NaturalLogPanel({
       </label>
 
       <div className="natural-log-meta">
-        <p>这段文字会发送给 DeepSeek 用于解析；{userId ? '确认后的记录会保存到你的云端账号。' : '确认后的正式记录只保存在当前浏览器。'}</p>
+        <p>{userId
+          ? '这段文字会发送给 DeepSeek 用于解析；确认后的记录会保存到你的云端账号。'
+          : '登录后可使用 AI 整理。可前往「每日记录」手动填写，数据保存在当前浏览器。'}</p>
         <span aria-label={`已输入 ${text.length} 个字符`}>
           {text.length} / {AI_TEXT_MAX_LENGTH}
         </span>
@@ -163,7 +165,7 @@ export function NaturalLogPanel({
       <button
         type="button"
         className="primary-button natural-log-submit"
-        disabled={!canSubmitNaturalLog(text, activeDate, loading)}
+        disabled={!userId || !canSubmitNaturalLog(text, activeDate, loading)}
         onClick={submit}
       >
         {loading ? '正在整理……' : '帮我整理'}

@@ -59,7 +59,6 @@ export function KnowledgePanel({ items }: KnowledgePanelProps) {
         <>
           <div className="section-heading knowledge-heading-row">
             <div>
-              <span className="eyebrow">Course / 01</span>
               <h2 id="knowledge-title">减脂通识课程</h2>
               <p className="section-description">
                 先把最重要的规则弄明白，再开始控制热量。共 {items.length} 个模块、
@@ -81,7 +80,7 @@ export function KnowledgePanel({ items }: KnowledgePanelProps) {
                 aria-label={`进入${item.title}模块，共 ${item.cards.length} 条知识`}
               >
                 <span className="knowledge-index">
-                  MODULE {String(index + 1).padStart(2, '0')}
+                  模块 {String(index + 1).padStart(2, '0')}
                 </span>
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
@@ -118,7 +117,7 @@ export function KnowledgePanel({ items }: KnowledgePanelProps) {
             aria-live="polite"
           >
             <span className="eyebrow">
-              Knowledge / {String(cardIndex + 1).padStart(2, '0')}
+              知识卡 {String(cardIndex + 1).padStart(2, '0')}
             </span>
             <h2 id="knowledge-title">{selectedCard.title}</h2>
             <p className="course-lesson-summary">{selectedCard.summary}</p>
@@ -148,7 +147,6 @@ export function KnowledgePanel({ items }: KnowledgePanelProps) {
         <div className="knowledge-overview">
           <div className="course-view-header knowledge-overview-header">
             <div>
-              <span className="eyebrow">Course / Overview</span>
               <h2 id="knowledge-title">减脂知识总览</h2>
               <p className="section-description">
                 所有核心知识放在一起，适合快速复习，不需要按顺序阅读。
@@ -164,7 +162,7 @@ export function KnowledgePanel({ items }: KnowledgePanelProps) {
               <section className="knowledge-overview-group" key={item.title}>
                 <div className="knowledge-overview-group-heading">
                   <span className="knowledge-index">
-                    MODULE {String(index + 1).padStart(2, '0')}
+                    模块 {String(index + 1).padStart(2, '0')}
                   </span>
                   <h3>{item.title}</h3>
                   <button type="button" onClick={() => openModule(index)}>

@@ -50,7 +50,7 @@ export function FoodLog({ userId, record, previousRecord, onChange }: FoodLogPro
 
   return (
     <section className="panel food-panel" aria-labelledby="food-title">
-      <div className="section-heading"><span className="eyebrow">Food</span><h2 id="food-title">饮食</h2></div>
+      <div className="section-heading"><h2 id="food-title">饮食</h2></div>
       <FoodEditor submitLabel="添加食物" onSave={(food) => onChange(appendFoods(record, [{ ...food, id: createFoodId() }]))} />
       <p className="food-help">{userId
         ? '当前账号的收藏与餐食模板只保存在这台设备的浏览器，不会跨设备同步。'

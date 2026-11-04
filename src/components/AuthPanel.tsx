@@ -6,10 +6,12 @@ import { supabase } from '../auth/supabase'
 type AuthPanelProps = {
   recovering: boolean
   onRecovered: () => void
+  onContinueAsGuest?: () => void
 }
 type AuthMode = 'sign-in' | 'sign-up' | 'reset-request'
+const EMAIL_LINK_HINT = '请检查收件箱和垃圾邮件，并在当前浏览器打开邮件链接。'
 
-export function AuthPanel({ recovering, onRecovered }: AuthPanelProps) {
+export function AuthPanel({ recovering, onRecovered, onContinueAsGuest }: AuthPanelProps) {
   const [mode, setMode] = useState<AuthMode>('sign-in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -85,12 +87,12 @@ export function AuthPanel({ recovering, onRecovered }: AuthPanelProps) {
         setConfirmation('')
         if (!data.session) {
           setMode('sign-in')
-          setNotice('请查看邮箱并完成确认，再返回登录。请在当前浏览器打开邮件链接。')
+          setNotice(`请完成邮箱确认后再登录。${EMAIL_LINK_HINT}`)
         }
       } else {
         const { error: resetError } = await client.auth.resetPasswordForEmail(normalizedEmail, { redirectTo })
         if (resetError) throw resetError
-        setNotice('如果该邮箱已注册，你将收到密码重置邮件。请在当前浏览器打开邮件链接。')
+        setNotice(`如果该邮箱已注册，你将收到密码重置邮件。${EMAIL_LINK_HINT}`)
       }
     })
   }
@@ -110,14 +112,14 @@ export function AuthPanel({ recovering, onRecovered }: AuthPanelProps) {
         options: { emailRedirectTo: buildAuthRedirectUrl(window.location.href) },
       })
       if (resendError) throw resendError
-      setNotice('如果该邮箱需要确认，确认邮件会再次发送。请查看收件箱和垃圾邮件。')
+      setNotice(`如果该邮箱需要确认，确认邮件会再次发送。${EMAIL_LINK_HINT}`)
     })
   }
 
   return (
     <section className="panel auth-panel" aria-labelledby="auth-title">
       <div className="section-heading">
-        <span className="eyebrow">Account / EasyFitness</span>
+        <span className="eyebrow">EasyFitness</span>
         <h2 id="auth-title">{title}</h2>
         <p className="section-description">
           {recovering ? '设置新密码后即可继续使用账户。' : mode === 'reset-request'
@@ -169,6 +171,14 @@ export function AuthPanel({ recovering, onRecovered }: AuthPanelProps) {
               <button type="button" className="course-text-button" disabled={busy} onClick={resendConfirmation}>重发确认邮件</button>
             </>
           )}
+        </div>
+      )}
+      {!recovering && onContinueAsGuest && (
+        <div className="auth-guest">
+          <button type="button" className="secondary-button" disabled={busy} onClick={onContinueAsGuest}>
+            暂不登录，先使用
+          </button>
+          <p>记录只保存在当前浏览器，登录后可复核并导入账号。AI 功能需要登录。</p>
         </div>
       )}
     </section>

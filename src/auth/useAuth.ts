@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { AUTH_LINK_ERROR, getAuthErrorMessage } from './errors'
 import { cleanAuthUrl } from './redirect'
 import { initialAuthRedirect, supabase } from './supabase'
+import { readGuestMode, saveGuestMode } from './guestMode'
 
 const replaceAuthUrl = (recovering: boolean) => {
   const clean = cleanAuthUrl(window.location.href, recovering)
@@ -12,6 +13,7 @@ const replaceAuthUrl = (recovering: boolean) => {
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(supabase !== null)
+  const [guestMode, setGuestMode] = useState(() => !initialAuthRedirect.hasCallback && readGuestMode())
   const [error, setError] = useState<string | null>(initialAuthRedirect.error)
   const [recovering, setRecovering] = useState(Boolean(supabase && initialAuthRedirect.recovering))
   const recoveryRef = useRef(Boolean(supabase && initialAuthRedirect.recovering))
@@ -25,15 +27,24 @@ export function useAuth() {
     let active = true
     let liveEvents = 0
     let initializing = true
+    const acceptSession = (nextSession: Session | null) => {
+      setSession(nextSession)
+      if (nextSession) {
+        saveGuestMode(false)
+        setGuestMode(false)
+      }
+    }
     const { data: { subscription } } = client.auth.onAuthStateChange((event, nextSession) => {
       if (!active || (event === 'INITIAL_SESSION' && liveEvents > 0)) return
       if (event !== 'INITIAL_SESSION') liveEvents += 1
-      setSession(nextSession)
+      acceptSession(nextSession)
       if (event === 'PASSWORD_RECOVERY') {
         recoveryRef.current = true
         setRecovering(true)
         setError(null)
       } else if (event === 'SIGNED_OUT') {
+        saveGuestMode(false)
+        setGuestMode(false)
         recoveryRef.current = false
         setRecovering(false)
         replaceAuthUrl(false)
@@ -55,7 +66,7 @@ export function useAuth() {
           (initialized.error ? getAuthErrorMessage(initialized.error, AUTH_LINK_ERROR) : null) ??
           (callbackUnresolved ? AUTH_LINK_ERROR : null)
         if (liveEvents === version) {
-          setSession(result.data.session)
+          acceptSession(result.data.session)
           setError(callbackError ?? (result.error ? getAuthErrorMessage(result.error) : null))
           recoveryRef.current = Boolean(result.data.session && recoveryRef.current && !callbackError)
           setRecovering(recoveryRef.current)
@@ -106,5 +117,17 @@ export function useAuth() {
     }
   }
 
-  return { session, loading, error, recovering, finishRecovery, signOut }
+  const continueAsGuest = () => {
+    if (session || recovering || loading) return
+    saveGuestMode(true)
+    setGuestMode(true)
+    setError(null)
+  }
+
+  const showSignIn = () => {
+    saveGuestMode(false)
+    setGuestMode(false)
+  }
+
+  return { session, loading, error, recovering, guestMode, continueAsGuest, showSignIn, finishRecovery, signOut }
 }

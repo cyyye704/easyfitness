@@ -139,6 +139,9 @@ export const createCloudRepository = (
       if (saved.data.date !== data.date) {
         throw new CloudDataError('invalid')
       }
+      if (JSON.stringify(saved.data.coros) !== JSON.stringify(data.coros)) {
+        throw new CloudDataError('invalid', '云端未完整保存 COROS 数据，请检查数据库配置后重试。')
+      }
       return saved
     },
     async saveProfile(profile, expectedRevision, signal) {

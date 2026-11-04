@@ -17,6 +17,13 @@ export type UnestimatedMeal = {
   reason: string
 }
 
+export type CorosDailyData = {
+  sourceDate: string
+  sleepHours: number | null
+  activeCaloriesKcal: number | null
+  syncedAt: string
+}
+
 export type DailyRecord = {
   date: string
   weightKg: number | null
@@ -26,6 +33,7 @@ export type DailyRecord = {
   sleepHours: number | null
   foods: FoodItem[]
   unestimatedMeals: UnestimatedMeal[]
+  coros?: CorosDailyData
 }
 
 export type NutritionSummary = {

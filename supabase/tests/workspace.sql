@@ -1,4 +1,4 @@
--- Run after both migrations in SQL Editor. All fixtures are rolled back.
+-- Run after all migrations in SQL Editor. All fixtures are rolled back.
 -- These checks use real RLS roles and the same compare-and-swap UPDATE as the client.
 begin;
 
@@ -51,6 +51,7 @@ declare
   saved_profile_revision bigint;
   profile_data jsonb;
   invalid_confirmation jsonb;
+  invalid_coros jsonb;
 begin
   if (select count(*) from public.daily_records) <> 1
     or (select count(*) from public.user_profiles) <> 1 then
@@ -188,6 +189,64 @@ begin
   delete from public.daily_records where user_id = alice_id and date = '2026-10-30';
   get diagnostics changed = row_count;
   if changed <> 1 then raise exception 'An incomplete unestimated meal could not be saved'; end if;
+
+  insert into public.daily_records (user_id, date, data)
+  values (alice_id, '2026-10-30', '{"date":"2026-10-30","weightKg":null,"sleepHours":8,"training":"","foods":[],"unestimatedMeals":[],"coros":{"sourceDate":"2026-10-30","sleepHours":7.53,"activeCaloriesKcal":456.7,"syncedAt":"2026-11-04T08:15:30.123Z"}}');
+  if not exists (
+    select 1 from public.daily_records where user_id = alice_id and date = '2026-10-30'
+      and data -> 'coros' -> 'sleepHours' = '7.53'::jsonb
+      and data -> 'coros' -> 'activeCaloriesKcal' = '456.7'::jsonb
+      and data -> 'sleepHours' = '8'::jsonb
+      and data -> 'foods' = '[]'::jsonb
+  ) then
+    raise exception 'COROS data was lost or changed confirmed sleep or food calories';
+  end if;
+  begin
+    update public.daily_records set data = data - 'coros'
+    where user_id = alice_id and date = '2026-10-30';
+    raise exception 'An older client silently removed COROS data';
+  exception when check_violation then null;
+  end;
+  update public.daily_records set data = jsonb_set(data, '{weightKg}', '69')
+  where user_id = alice_id and date = '2026-10-30';
+  if not exists (
+    select 1 from public.daily_records where user_id = alice_id and date = '2026-10-30'
+      and data -> 'coros' -> 'activeCaloriesKcal' = '456.7'::jsonb
+  ) then
+    raise exception 'An unrelated record edit lost COROS data';
+  end if;
+  delete from public.daily_records where user_id = alice_id and date = '2026-10-30';
+
+  for invalid_coros in
+    select value from jsonb_array_elements(
+      '[null,[],{},
+        {"sourceDate":"2026-10-29","sleepHours":8,"activeCaloriesKcal":400,"syncedAt":"2026-11-04T08:15:30Z"},
+        {"sourceDate":"2026-10-30","sleepHours":25,"activeCaloriesKcal":400,"syncedAt":"2026-11-04T08:15:30Z"},
+        {"sourceDate":"2026-10-30","sleepHours":8,"activeCaloriesKcal":30001,"syncedAt":"2026-11-04T08:15:30Z"},
+        {"sourceDate":"2026-10-30","sleepHours":null,"activeCaloriesKcal":null,"syncedAt":"2026-11-04T08:15:30Z"},
+        {"sourceDate":"2026-10-30","sleepHours":"8","activeCaloriesKcal":400,"syncedAt":"2026-11-04T08:15:30Z"},
+        {"sourceDate":"2026-10-30","sleepHours":8,"activeCaloriesKcal":400,"syncedAt":"yesterday"},
+        {"sourceDate":"2026-10-30","sleepHours":8,"activeCaloriesKcal":400,"syncedAt":"2026-02-30T08:15:30Z"},
+        {"sourceDate":"2026-10-30","sleepHours":8,"activeCaloriesKcal":400,"syncedAt":"2026-11-04T24:00:00Z"},
+        {"sourceDate":"2026-10-30","sleepHours":8,"activeCaloriesKcal":400,"syncedAt":"2026-11-04T08:15:30Z","unknown":1}
+      ]'::jsonb
+    )
+  loop
+    begin
+      insert into public.daily_records (user_id, date, data)
+      values (
+        alice_id, '2026-10-30',
+        '{"date":"2026-10-30","weightKg":null,"sleepHours":null,"training":"","foods":[],"unestimatedMeals":[]}'::jsonb
+          || jsonb_build_object('coros', invalid_coros)
+      );
+      raise exception 'Invalid COROS data was accepted: %', invalid_coros;
+    exception when check_violation or invalid_datetime_format or datetime_field_overflow or invalid_parameter_value then null;
+    end;
+  end loop;
+  insert into public.daily_records (user_id, date, data)
+  values (alice_id, '2026-10-30', '{"date":"2026-10-30","weightKg":null,"sleepHours":null,"training":"","foods":[],"unestimatedMeals":[],"coros":{"sourceDate":"2026-10-30","sleepHours":null,"activeCaloriesKcal":0,"syncedAt":"2026-11-04T08:15:30Z"}}');
+  delete from public.daily_records where user_id = alice_id and date = '2026-10-30';
+
   select data into profile_data from public.user_profiles where user_id = alice_id;
   delete from public.user_profiles where user_id = alice_id and revision = saved_profile_revision;
   get diagnostics changed = row_count;

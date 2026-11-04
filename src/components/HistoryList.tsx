@@ -11,7 +11,6 @@ export function HistoryList({ records, activeDate, onSelectDate }: HistoryListPr
   return (
     <section className="panel" aria-labelledby="history-title">
       <div className="section-heading">
-        <span className="eyebrow">History</span>
         <h2 id="history-title">历史记录</h2>
       </div>
 
@@ -38,6 +37,7 @@ export function HistoryList({ records, activeDate, onSelectDate }: HistoryListPr
                     {record.unestimatedMeals.length > 0 &&
                       ` · ${record.unestimatedMeals.length} 条未估算`}
                   </span>
+                  {record.coros?.activeCaloriesKcal != null && <span>COROS 活动 {record.coros.activeCaloriesKcal} kcal</span>}
                 </button>
               </li>
             )

@@ -1,8 +1,19 @@
 import type { DailyRecord } from './types'
 import { createEmptyRecord, isDateKey, roundToOneDecimal } from './utils.ts'
 import { normalizeMeal } from './food/foodUtils.ts'
+import { parseCorosDailyData } from './data/validation.ts'
 
 const STORAGE_KEY = 'easyfitness.records.v1'
+const COROS_STORAGE_ERROR = '本地 COROS 记录格式无法识别，原数据已保留，未覆盖。请先修复或导出原记录。'
+const COROS_PRESERVATION_ERROR = '本地记录已有 COROS 数据，当前修改未保留这些数据。请重新加载后重试。'
+
+const parseStoredCoros = (value: unknown, date: string) => {
+  try {
+    return parseCorosDailyData(value, date)
+  } catch {
+    throw new Error(COROS_STORAGE_ERROR)
+  }
+}
 
 type StoredRecords = {
   version: 1
@@ -62,6 +73,9 @@ export const loadRecords = (): LoadRecordsResult => {
     let ignoredInvalidContent = false
 
     Object.entries(parsed.records).forEach(([date, value]) => {
+      // Never let a malformed or newer COROS block be discarded during normalization.
+      const coros = isObject(value) && value.coros !== undefined
+        ? parseStoredCoros(value.coros, date) : undefined
       if (!isDateKey(date) || !isObject(value)) {
         ignoredInvalidContent = true
         return
@@ -165,6 +179,7 @@ export const loadRecords = (): LoadRecordsResult => {
             (Array.isArray(value.unestimatedMeals) && value.unestimatedMeals.length === 0)),
         foods,
         unestimatedMeals,
+        ...(coros === undefined ? {} : { coros }),
       }
 
       if (typeof value.training !== 'string') {
@@ -178,10 +193,11 @@ export const loadRecords = (): LoadRecordsResult => {
         ? '部分本地记录格式异常，已忽略异常内容并保留其他记录。'
         : null,
     }
-  } catch {
+  } catch (error) {
     return {
       records: {},
-      warning: '无法读取本地记录，原数据未被自动覆盖。',
+      warning: error instanceof Error && error.message === COROS_STORAGE_ERROR
+        ? COROS_STORAGE_ERROR : '无法读取本地记录，原数据未被自动覆盖。',
     }
   }
 }
@@ -190,6 +206,23 @@ export const saveRecords = (
   records: Record<string, DailyRecord>,
 ): SaveRecordsResult => {
   try {
+    // Guard existing source data too: a failed load must not be followed by a
+    // write that silently replaces unsupported COROS fields with an empty record.
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const previous: unknown = JSON.parse(raw)
+      if (isObject(previous) && isObject(previous.records)) {
+        for (const [date, record] of Object.entries(previous.records)) {
+          if (isObject(record) && record.coros !== undefined) {
+            parseStoredCoros(record.coros, date)
+            if (records[date]?.coros === undefined) throw new Error(COROS_PRESERVATION_ERROR)
+          }
+        }
+      }
+    }
+    for (const [date, record] of Object.entries(records)) {
+      if (record.coros !== undefined) parseStoredCoros(record.coros, date)
+    }
     const payload: StoredRecords = {
       version: 1,
       records,
@@ -197,10 +230,12 @@ export const saveRecords = (
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     return { ok: true, error: null }
-  } catch {
+  } catch (error) {
     return {
       ok: false,
-      error: '本地保存失败，请检查浏览器存储权限或剩余空间。',
+      error: error instanceof Error &&
+        [COROS_STORAGE_ERROR, COROS_PRESERVATION_ERROR].includes(error.message)
+        ? error.message : '本地保存失败，请检查浏览器存储权限或剩余空间。',
     }
   }
 }

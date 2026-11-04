@@ -17,6 +17,7 @@ export const PROFILE_SYSTEM_PROMPT = `你是 EasyFitness 的个人身体基线�
 12. unknowns 只保留真正影响档案完整度的信息，不生成追问问题；用户未说明是否存在健康或伤病限制时，写入一条简短 unknown，用户明确表示没有时不要写入。
 13. 不输出 profile ID、日期、BMI、模型层级、计划或目标数值。
 14. 所有字段必须完整出现。
+15. strengthSessionsPerWeek 和 cardioSessionsPerWeek 表示平均每周次数，可以是小数。用户明确提供某类训练的频次范围时，可取范围中点（例如力量每周 3～4 次为 3.5），并在 notes 保留原范围；不要擅自取整。若只说总训练频次而未区分力量和有氧，不要猜测拆分，保留在 notes。
 
 必须严格使用以下 JSON 结构：
 {

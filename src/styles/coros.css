@@ -1,0 +1,27 @@
+.coros-panel { margin-bottom: 16px; }
+.coros-toolbar, .coros-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.coros-toolbar { justify-content: space-between; }
+.coros-toolbar label { min-width: 150px; }
+.coros-toolbar .primary-button, .coros-actions .primary-button { width: auto; min-height: 44px; margin: 0; padding: 10px 16px; }
+.coros-actions .secondary-button { min-height: 44px; }
+.coros-connection { color: var(--text); font-size: 13px; }
+.coros-review { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 4px; }
+.coros-review h3 { font-size: 16px; }
+.coros-days { display: grid; gap: 10px; margin: 14px 0; }
+.coros-day { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.coros-check { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.coros-check input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; accent-color: var(--accent); }
+.coros-date { flex-wrap: wrap; }
+.coros-date strong { font-family: var(--mono); color: var(--text); font-size: 13px; }
+.coros-date span { font-size: 11px; }
+.coros-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+.coros-metrics dt { font-size: 11px; color: var(--muted); }
+.coros-metrics dd { margin: 4px 0 0; font-size: 15px; font-family: var(--mono); }
+.coros-warnings { padding-left: 20px; font-size: 12px; color: var(--danger); }
+.coros-summary { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; }
+.coros-summary p { margin: 4px 0; font-size: 12px; color: var(--muted); }
+.coros-summary strong { color: var(--text); }
+@media (max-width: 480px) {
+  .coros-toolbar { align-items: stretch; flex-direction: column; }
+  .coros-toolbar .coros-actions > button { flex: 1 1 auto; }
+}

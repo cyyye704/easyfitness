@@ -116,8 +116,8 @@ export function ProfileQuestionStep({
         return invalidMessage('age', 13, 120, true)
       case 'trainingFrequency':
         return (
-          invalidMessage('strengthSessionsPerWeek', 0, 14, true) ??
-          invalidMessage('cardioSessionsPerWeek', 0, 14, true)
+          invalidMessage('strengthSessionsPerWeek', 0, 14) ??
+          invalidMessage('cardioSessionsPerWeek', 0, 14)
         )
       case 'averageSleepHours':
         return invalidMessage('averageSleepHours', 0, 24)
@@ -289,20 +289,19 @@ export function ProfileQuestionStep({
       {questionId === 'trainingFrequency' && (
         <div className="profile-compound-input">
           <label>
-            <span>每周力量训练次数</span>
+            <span>每周力量训练平均次数</span>
             <input
               type="number"
               min="0"
               max="14"
-              step="1"
-              inputMode="numeric"
+              step="any"
+              inputMode="decimal"
               aria-invalid={
                 Boolean(numericInputs.strengthSessionsPerWeek.trim()) &&
                 numberOrNull(
                   numericInputs.strengthSessionsPerWeek,
                   0,
                   14,
-                  true,
                 ) === null
               }
               value={numericInputs.strengthSessionsPerWeek}
@@ -312,26 +311,24 @@ export function ProfileQuestionStep({
                   event.target.value,
                   0,
                   14,
-                  true,
                 )
               }
             />
           </label>
           <label>
-            <span>每周有氧训练次数</span>
+            <span>每周有氧训练平均次数</span>
             <input
               type="number"
               min="0"
               max="14"
-              step="1"
-              inputMode="numeric"
+              step="any"
+              inputMode="decimal"
               aria-invalid={
                 Boolean(numericInputs.cardioSessionsPerWeek.trim()) &&
                 numberOrNull(
                   numericInputs.cardioSessionsPerWeek,
                   0,
                   14,
-                  true,
                 ) === null
               }
               value={numericInputs.cardioSessionsPerWeek}
@@ -341,7 +338,6 @@ export function ProfileQuestionStep({
                   event.target.value,
                   0,
                   14,
-                  true,
                 )
               }
             />

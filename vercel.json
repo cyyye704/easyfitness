@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
+    "api/coros.ts": {
+      "maxDuration": 60
+    },
     "api/ai/parse-daily-log.ts": {
       "maxDuration": 35
     },

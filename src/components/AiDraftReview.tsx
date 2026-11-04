@@ -96,7 +96,6 @@ export function AiDraftReview({
     <div className="ai-draft-review" aria-labelledby="ai-review-title">
       <div className="ai-review-heading">
         <div>
-          <span className="eyebrow">Draft / Check before save</span>
           <h3 id="ai-review-title">检查 AI 整理草稿</h3>
         </div>
         <span className="ai-date-chip">{draft.date}</span>

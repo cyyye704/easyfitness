@@ -38,7 +38,7 @@ const getAuthConfig = () => {
   return { url, publishableKey }
 }
 
-export const requireAuthenticatedUser = async (request: Request): Promise<void> => {
+export const requireAuthenticatedUser = async (request: Request): Promise<{ id: string }> => {
   const { url, publishableKey } = getAuthConfig()
   const authorization = request.headers.get('authorization') ?? ''
   const token = /^Bearer ([^\s,]+)$/i.exec(authorization)?.[1]
@@ -75,6 +75,7 @@ export const requireAuthenticatedUser = async (request: Request): Promise<void> 
       throw authUnavailable()
     }
     if ('is_anonymous' in user && user.is_anonymous) throw authRequired()
+    return { id: user.id }
   } catch (error) {
     if (request.signal.aborted) throw authCancelled()
     if (error instanceof HttpRequestError) throw error

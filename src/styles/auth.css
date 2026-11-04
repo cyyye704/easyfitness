@@ -75,6 +75,25 @@
   min-height: 44px;
 }
 
+.auth-guest {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.auth-guest button {
+  min-height: 44px;
+}
+
+.auth-guest p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .auth-panel :where(button, input):focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;

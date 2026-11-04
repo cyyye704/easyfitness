@@ -28,7 +28,6 @@ export function ProfileSummaryCard({
     <section className="panel profile-summary-card" aria-labelledby="profile-summary-title">
       <div className="profile-summary-heading">
         <div>
-          <span className="eyebrow">Profile / Personal baseline</span>
           <h2 id="profile-summary-title">个人基线</h2>
         </div>
         <button type="button" className="secondary-button" onClick={onEdit}>

@@ -27,6 +27,7 @@ export const hasRecordContent = (record: DailyRecord) =>
   record.trainingStatus === 'trained' ||
   record.trainingStatus === 'rest' ||
   record.nutritionComplete === true ||
+  record.coros !== undefined ||
   record.foods.length > 0 ||
   record.unestimatedMeals.length > 0
 

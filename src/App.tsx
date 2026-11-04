@@ -32,10 +32,10 @@ function App() {
   if (supabase && auth.loading) {
     return <main className="app-shell"><p role="status">正在恢复登录状态……</p></main>
   }
-  if (supabase && (!auth.session || auth.recovering)) {
+  if (supabase && (auth.recovering || (!auth.session && !auth.guestMode))) {
     return <>
       {auth.error && <p className="storage-notice auth-global-error" role="alert">{auth.error}</p>}
-      <AuthPanel recovering={auth.recovering} onRecovered={auth.finishRecovery} />
+      <AuthPanel recovering={auth.recovering} onRecovered={auth.finishRecovery} onContinueAsGuest={auth.continueAsGuest} />
     </>
   }
 
@@ -47,7 +47,8 @@ function App() {
         repository={repository}
         userId={userId}
         email={auth.session?.user.email}
-        onSignOut={supabase ? auth.signOut : undefined}
+        onSignOut={userId ? auth.signOut : undefined}
+        onSignIn={supabase && !userId ? auth.showSignIn : undefined}
       />
     </Suspense>
   </>
