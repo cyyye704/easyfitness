@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EasyFitness 注册验证码</title>
+  </head>
+  <body style="margin: 0; padding: 0; background-color: #f4f4f5; color: #18181b; font-family: Arial, 'Microsoft YaHei', sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f4f5;">
+      <tr>
+        <td align="center" style="padding: 32px 16px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px; background-color: #ffffff; border: 1px solid #e4e4e7;">
+            <tr>
+              <td style="padding: 24px; background-color: #18181b; border-bottom: 4px solid #b91c1c; color: #ffffff; font-size: 22px; font-weight: 700;">EasyFitness</td>
+            </tr>
+            <tr>
+              <td style="padding: 28px 24px;">
+                <h1 style="margin: 0 0 16px; font-size: 22px; line-height: 1.4;">确认你的邮箱</h1>
+                <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.7;">请在 EasyFitness 的邮箱验证页输入以下注册验证码：</p>
+                <div style="padding: 20px 8px; border: 1px solid #e4e4e7; background-color: #fafafa; text-align: center; color: #b91c1c; font-family: 'Courier New', monospace; font-size: 28px; font-weight: 700; letter-spacing: 2px; line-height: 1.4; white-space: nowrap;">{{ .Token }}</div>
+                <p style="margin: 20px 0; color: #52525b; font-size: 14px; line-height: 1.7;">验证码在 1 小时内有效。请使用最新邮件中的验证码，不要向他人透露。你可以在任意浏览器输入注册邮箱和验证码。</p>
+                <p style="margin: 24px 0;">
+                  <a href="{{ .SiteURL }}?auth=verify" style="display: inline-block; padding: 12px 18px; border: 1px solid #b91c1c; background-color: #b91c1c; color: #ffffff; font-size: 16px; font-weight: 700; line-height: 1.5; text-decoration: none;">返回邮箱验证页</a>
+                </p>
+                <p style="margin: 0; color: #52525b; font-size: 14px; line-height: 1.7;">此链接只打开验证页面，仍需输入邮箱和验证码。如果不是你本人注册，请忽略此邮件。</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

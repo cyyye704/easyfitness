@@ -1,6 +1,6 @@
 const messages: Record<string, string> = {
   invalid_credentials: '邮箱或密码不正确，请检查后重试。',
-  email_not_confirmed: '请先打开确认邮件验证邮箱，也可以重新发送确认邮件。',
+  email_not_confirmed: '邮箱尚未验证，请输入邮件中的验证码，也可以重新发送验证码。',
   email_address_invalid: '邮箱格式不正确，请检查后重试。',
   email_address_not_authorized: '当前邮件服务暂时无法向此邮箱发送邮件，请联系应用维护者。',
   email_provider_disabled: '邮箱登录暂未启用，请联系应用维护者。',

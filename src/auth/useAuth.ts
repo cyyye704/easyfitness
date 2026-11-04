@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { AUTH_LINK_ERROR, getAuthErrorMessage } from './errors'
 import { cleanAuthUrl } from './redirect'
 import { initialAuthRedirect, supabase } from './supabase'
 import { readGuestMode, saveGuestMode } from './guestMode'
+import { clearPendingEmailVerification, isEmailVerificationRequested, readPendingEmailVerification } from './emailVerification'
 
 const replaceAuthUrl = (recovering: boolean) => {
   const clean = cleanAuthUrl(window.location.href, recovering)
@@ -13,10 +14,12 @@ const replaceAuthUrl = (recovering: boolean) => {
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(supabase !== null)
-  const [guestMode, setGuestMode] = useState(() => !initialAuthRedirect.hasCallback && readGuestMode())
+  const [guestMode, setGuestMode] = useState(() => !initialAuthRedirect.hasCallback &&
+    !isEmailVerificationRequested() && !readPendingEmailVerification() && readGuestMode())
   const [error, setError] = useState<string | null>(initialAuthRedirect.error)
   const [recovering, setRecovering] = useState(Boolean(supabase && initialAuthRedirect.recovering))
   const recoveryRef = useRef(Boolean(supabase && initialAuthRedirect.recovering))
+  const clearError = useCallback(() => setError(null), [])
 
   useEffect(() => {
     if (!supabase) {
@@ -30,6 +33,7 @@ export function useAuth() {
     const acceptSession = (nextSession: Session | null) => {
       setSession(nextSession)
       if (nextSession) {
+        clearPendingEmailVerification()
         saveGuestMode(false)
         setGuestMode(false)
       }
@@ -43,6 +47,7 @@ export function useAuth() {
         setRecovering(true)
         setError(null)
       } else if (event === 'SIGNED_OUT') {
+        clearPendingEmailVerification()
         saveGuestMode(false)
         setGuestMode(false)
         recoveryRef.current = false
@@ -129,5 +134,7 @@ export function useAuth() {
     setGuestMode(false)
   }
 
-  return { session, loading, error, recovering, guestMode, continueAsGuest, showSignIn, finishRecovery, signOut }
+  return { session, loading, error, recovering, guestMode, continueAsGuest, showSignIn, finishRecovery, signOut,
+    clearError,
+  }
 }

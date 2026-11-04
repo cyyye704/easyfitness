@@ -35,7 +35,8 @@ function App() {
   if (supabase && (auth.recovering || (!auth.session && !auth.guestMode))) {
     return <>
       {auth.error && <p className="storage-notice auth-global-error" role="alert">{auth.error}</p>}
-      <AuthPanel recovering={auth.recovering} onRecovered={auth.finishRecovery} onContinueAsGuest={auth.continueAsGuest} />
+      <AuthPanel recovering={auth.recovering} onRecovered={auth.finishRecovery} onContinueAsGuest={auth.continueAsGuest}
+        onClearAuthError={auth.clearError} hasCallbackError={Boolean(auth.error)} />
     </>
   }
 

@@ -1,17 +1,21 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { getAuthErrorMessage } from '../auth/errors'
 import { buildAuthRedirectUrl } from '../auth/redirect'
 import { supabase } from '../auth/supabase'
+import { clearPendingEmailVerification, isEmailVerificationRequested, readPendingEmailVerification, savePendingEmailVerification, type PendingEmailVerification } from '../auth/emailVerification'
+import { EmailVerificationPanel } from './EmailVerificationPanel.tsx'
 
 type AuthPanelProps = {
   recovering: boolean
   onRecovered: () => void
   onContinueAsGuest?: () => void
+  onClearAuthError?: () => void
+  hasCallbackError?: boolean
 }
 type AuthMode = 'sign-in' | 'sign-up' | 'reset-request'
 const EMAIL_LINK_HINT = '请检查收件箱和垃圾邮件，并在当前浏览器打开邮件链接。'
 
-export function AuthPanel({ recovering, onRecovered, onContinueAsGuest }: AuthPanelProps) {
+export function AuthPanel({ recovering, onRecovered, onContinueAsGuest, onClearAuthError, hasCallbackError = false }: AuthPanelProps) {
   const [mode, setMode] = useState<AuthMode>('sign-in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,10 +23,17 @@ export function AuthPanel({ recovering, onRecovered, onContinueAsGuest }: AuthPa
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [verification, setVerification] = useState<PendingEmailVerification | null>(() =>
+    recovering || hasCallbackError ? null :
+      readPendingEmailVerification() ?? (isEmailVerificationRequested() ? { email: '', sentAt: null } : null))
   const busyRef = useRef(false)
   const creatingPassword = recovering || mode === 'sign-up'
   const needsPassword = recovering || mode !== 'reset-request'
   const title = recovering ? '设置新密码' : mode === 'sign-up' ? '创建账户' : mode === 'reset-request' ? '找回密码' : '登录 EasyFitness'
+
+  useEffect(() => {
+    if (verification && !recovering) onClearAuthError?.()
+  }, [verification, recovering, onClearAuthError])
 
   const changeMode = (nextMode: AuthMode) => {
     if (busyRef.current) return
@@ -31,7 +42,24 @@ export function AuthPanel({ recovering, onRecovered, onContinueAsGuest }: AuthPa
     setConfirmation('')
     setError(null)
     setNotice(null)
+    onClearAuthError?.()
   }
+
+  const showVerification = (recipient: string, sentAt: number | null) => {
+    const pending = { email: recipient, sentAt }
+    savePendingEmailVerification(pending)
+    setVerification(pending)
+    setPassword('')
+    setConfirmation('')
+    setError(null)
+    setNotice(null)
+    onClearAuthError?.()
+  }
+
+  const continueAsGuest = onContinueAsGuest ? () => {
+    clearPendingEmailVerification()
+    onContinueAsGuest()
+  } : undefined
 
   const runAction = async (action: () => Promise<void>) => {
     if (busyRef.current || !supabase) return
@@ -74,6 +102,10 @@ export function AuthPanel({ recovering, onRecovered, onContinueAsGuest }: AuthPa
       const redirectTo = buildAuthRedirectUrl(window.location.href, mode === 'reset-request')
       if (mode === 'sign-in') {
         const { error: loginError } = await client.auth.signInWithPassword({ email: normalizedEmail, password })
+        if (loginError?.code === 'email_not_confirmed') {
+          showVerification(normalizedEmail, null)
+          return
+        }
         if (loginError) throw loginError
         setPassword('')
       } else if (mode === 'sign-up') {
@@ -86,8 +118,7 @@ export function AuthPanel({ recovering, onRecovered, onContinueAsGuest }: AuthPa
         setPassword('')
         setConfirmation('')
         if (!data.session) {
-          setMode('sign-in')
-          setNotice(`请完成邮箱确认后再登录。${EMAIL_LINK_HINT}`)
+          showVerification(normalizedEmail, Date.now())
         }
       } else {
         const { error: resetError } = await client.auth.resetPasswordForEmail(normalizedEmail, { redirectTo })
@@ -97,23 +128,18 @@ export function AuthPanel({ recovering, onRecovered, onContinueAsGuest }: AuthPa
     })
   }
 
-  const resendConfirmation = () => {
-    const normalizedEmail = email.trim()
-    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      setError('请先填写有效邮箱，再重新发送确认邮件。')
-      return
-    }
-    const client = supabase
-    if (!client) return
-    void runAction(async () => {
-      const { error: resendError } = await client.auth.resend({
-        type: 'signup',
-        email: normalizedEmail,
-        options: { emailRedirectTo: buildAuthRedirectUrl(window.location.href) },
-      })
-      if (resendError) throw resendError
-      setNotice(`如果该邮箱需要确认，确认邮件会再次发送。${EMAIL_LINK_HINT}`)
-    })
+  if (!recovering && verification) {
+    return <EmailVerificationPanel
+      initialEmail={verification.email}
+      sentAt={verification.sentAt}
+      onBack={(recipient) => {
+        clearPendingEmailVerification()
+        setVerification(null)
+        setEmail(recipient)
+        changeMode('sign-in')
+      }}
+      onContinueAsGuest={continueAsGuest}
+    />
   }
 
   return (
@@ -168,14 +194,14 @@ export function AuthPanel({ recovering, onRecovered, onContinueAsGuest }: AuthPa
           ) : (
             <>
               <button type="button" className="course-text-button" disabled={busy} onClick={() => changeMode('reset-request')}>忘记密码</button>
-              <button type="button" className="course-text-button" disabled={busy} onClick={resendConfirmation}>重发确认邮件</button>
+              <button type="button" className="course-text-button" disabled={busy} onClick={() => showVerification(email.trim(), null)}>验证邮箱 / 重发验证码</button>
             </>
           )}
         </div>
       )}
       {!recovering && onContinueAsGuest && (
         <div className="auth-guest">
-          <button type="button" className="secondary-button" disabled={busy} onClick={onContinueAsGuest}>
+          <button type="button" className="secondary-button" disabled={busy} onClick={continueAsGuest}>
             暂不登录，先使用
           </button>
           <p>记录只保存在当前浏览器，登录后可复核并导入账号。AI 功能需要登录。</p>

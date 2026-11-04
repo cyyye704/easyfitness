@@ -98,3 +98,15 @@
   outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
+
+.auth-verification-help {
+  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+#auth-verification-code {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.16em;
+}
