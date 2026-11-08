@@ -16,6 +16,24 @@ test('auth callback errors are translated without displaying provider text or UR
   assert.equal(getAuthErrorMessage({ message: 'private-token' }, 'safe'), 'safe')
 })
 
+test('auth distinguishes server failures from unknown client errors without exposing provider details', () => {
+  const providerDetails = {
+    message: 'SMTP secret-token at https://private.example/',
+    error_description: 'access_token=private-access',
+  }
+  const serviceError = '账户服务暂时异常，请稍后重试。'
+  assert.equal(getAuthErrorMessage({ ...providerDetails, code: 'unexpected_failure' }), serviceError)
+  for (const status of [500, 502, 503, 599]) {
+    assert.equal(getAuthErrorMessage({ ...providerDetails, code: 'unknown_code', status }, 'safe fallback'), serviceError)
+  }
+  assert.match(getAuthErrorMessage({ ...providerDetails, code: 'email_address_not_authorized', status: 500 }), /无法向此邮箱发送邮件/)
+  assert.match(getAuthErrorMessage({ ...providerDetails, code: 'over_email_send_rate_limit', status: 503 }), /发送过于频繁/)
+  assert.match(getAuthErrorMessage({ ...providerDetails, status: 429 }), /过于频繁/)
+  for (const status of [400, 401, 403, 499, 600, '500', 500.5, Number.NaN]) {
+    assert.equal(getAuthErrorMessage({ ...providerDetails, code: 'unknown_code', status }, 'safe fallback'), 'safe fallback')
+  }
+})
+
 test('PKCE cleanup removes all callback credentials while preserving normal URL state', () => {
   const callback = 'https://fitness.example/app?date=2026-10-28&code=private-code&sb_flow_id=private-flow&auth=recovery#section'
   assert.deepEqual(readAuthRedirect(callback), { recovering: true, hasCallback: true, hasCode: true, error: null })

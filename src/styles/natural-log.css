@@ -57,9 +57,10 @@
   align-items: start;
   justify-content: space-between;
   gap: 16px;
-  margin-top: 9px;
+  margin-top: 12px;
   color: var(--muted);
   font-size: 11px;
+  line-height: 1.75;
 }
 
 .natural-log-meta p {
@@ -92,8 +93,9 @@ button:disabled {
 .ai-inline-success {
   margin: 12px 0 0;
   border-radius: 7px;
-  padding: 10px 12px;
+  padding: 14px 16px;
   font-size: 13px;
+  line-height: 1.75;
 }
 
 .ai-inline-error {
@@ -122,6 +124,15 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.ai-food-card-heading {
+  flex-wrap: wrap;
+}
+
+.ai-food-card-heading strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .ai-review-heading h3,
@@ -254,7 +265,7 @@ button:disabled {
 .ai-food-draft {
   border: 1px solid var(--border);
   border-radius: 9px;
-  padding: 12px;
+  padding: 16px;
   background: rgba(255, 255, 255, 0.025);
 }
 
@@ -307,9 +318,10 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.025);
-  padding: 11px 12px;
+  padding: 14px 16px;
   color: var(--muted);
   font-size: 12px;
+  line-height: 1.75;
 }
 
 .ai-unknowns strong {
@@ -318,7 +330,7 @@ button:disabled {
 
 .ai-unknowns ul {
   display: grid;
-  gap: 5px;
+  gap: 8px;
   margin: 7px 0 0;
   padding-left: 18px;
 }

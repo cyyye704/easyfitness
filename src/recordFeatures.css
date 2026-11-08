@@ -75,7 +75,7 @@
   margin-top: 20px;
   border: 1px solid var(--border-strong);
   border-radius: 10px;
-  padding: 14px;
+  padding: 16px;
   background: var(--surface);
 }
 
@@ -84,6 +84,7 @@
   cursor: pointer;
   min-height: 30px;
   font-weight: 650;
+  line-height: 1.7;
 }
 
 .food-shortcuts summary small {
@@ -226,7 +227,6 @@
 }
 
 @media (max-width: 420px) {
-  .food-shortcuts, .weight-trend { padding: 10px; }
   .food-editor { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .food-panel .food-list li > .food-actions { width: 100%; }
 }

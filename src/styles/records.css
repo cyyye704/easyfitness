@@ -13,7 +13,7 @@
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 13px 11px;
+  padding: 16px 12px;
   background: var(--surface);
 }
 
@@ -41,11 +41,11 @@
   margin: 12px 0 0;
   border: 1px solid rgba(229, 35, 42, 0.3);
   border-radius: 7px;
-  padding: 9px 11px;
+  padding: 14px 16px;
   background: rgba(229, 35, 42, 0.07);
   color: #ffb1b4;
   font-size: 11px;
-  line-height: 1.55;
+  line-height: 1.7;
 }
 
 .reason-list {
@@ -59,6 +59,7 @@
 .reason-list li {
   color: var(--muted);
   font-size: 13px;
+  line-height: 1.7;
 }
 
 .reason-list li::before {
@@ -70,16 +71,16 @@
 .field-grid,
 .food-form {
   display: grid;
-  gap: 12px;
+  gap: 18px;
 }
 
 .field-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
 .stacked-field {
-  margin-top: 4px;
+  margin-top: 16px;
 }
 
 input,
@@ -99,7 +100,7 @@ select {
   border-radius: 8px;
   background: var(--input);
   color: var(--text);
-  padding: 11px 12px;
+  padding: 12px 14px;
   outline: none;
   transition:
     border-color 180ms ease,
@@ -109,6 +110,7 @@ select {
 
 textarea {
   resize: vertical;
+  line-height: 1.75;
 }
 
 input:hover,
@@ -145,11 +147,14 @@ button {
 }
 
 .primary-button {
-  min-height: 45px;
+  min-height: 48px;
+  padding: 12px 18px;
   border-radius: 8px;
   background: linear-gradient(135deg, var(--accent-bright), var(--accent-deep));
   color: #ffffff;
   font-weight: 800;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
   box-shadow: 0 8px 24px rgba(229, 35, 42, 0.2);
   transition:
     filter 180ms ease,
@@ -197,7 +202,7 @@ button {
   justify-content: space-between;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px;
+  padding: 16px;
   background: var(--surface);
   transition:
     border-color 180ms ease,
@@ -212,11 +217,13 @@ button {
 .food-list strong {
   color: var(--text);
   font-size: 15px;
+  line-height: 1.6;
 }
 
 .food-list span {
   color: var(--muted);
   font-size: 13px;
+  line-height: 1.7;
 }
 
 .food-list button {
@@ -338,7 +345,7 @@ button {
   border-radius: 8px;
   background: var(--surface);
   color: var(--text);
-  padding: 12px;
+  padding: 16px;
   text-align: left;
   transition:
     background 180ms ease,
@@ -365,6 +372,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .history-list strong {
@@ -382,6 +390,7 @@ button {
   margin: 0;
   color: var(--muted);
   font-size: 14px;
+  line-height: 1.75;
 }
 
 .template-import {

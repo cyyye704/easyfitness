@@ -16,12 +16,13 @@ const messages: Record<string, string> = {
   bad_code_verifier: '无法验证邮件链接，请在发起请求的同一浏览器中打开，或重新发送邮件。',
   session_not_found: '登录已失效，请重新登录或重新发送密码重置邮件。',
   refresh_token_not_found: '登录已失效，请重新登录。',
+  unexpected_failure: '账户服务暂时异常，请稍后重试。',
 }
 
 export const AUTH_LINK_ERROR = '邮件链接无法验证，请在发起请求的同一浏览器中打开，或重新发送邮件。'
 
 // Provider messages and redirect descriptions can contain URLs or credentials.
-// Only display our own messages selected by a known code.
+// Only display our own messages selected by a known code or HTTP status.
 export const getAuthErrorMessage = (
   error: unknown,
   fallback = '暂时无法完成账户操作，请检查网络后重试。',
@@ -30,5 +31,8 @@ export const getAuthErrorMessage = (
   const code = 'code' in error ? error.code : undefined
   if (typeof code === 'string' && Object.hasOwn(messages, code)) return messages[code]
   const status = 'status' in error ? error.status : undefined
+  if (typeof status === 'number' && Number.isInteger(status) && status >= 500 && status <= 599) {
+    return messages.unexpected_failure
+  }
   return status === 429 ? messages.over_request_rate_limit : fallback
 }

@@ -109,7 +109,12 @@ export const getEmailVerificationError = (error: unknown, action: 'verify' | 're
   if (error && typeof error === 'object') {
     const code = 'code' in error ? error.code : undefined
     if (typeof code === 'string' && Object.hasOwn(messages, code)) return messages[code]
-    if ('status' in error && error.status === 429) return messages.over_request_rate_limit
+    const status = 'status' in error ? error.status : undefined
+    if (code === 'unexpected_failure' ||
+      (typeof status === 'number' && Number.isInteger(status) && status >= 500 && status <= 599)) {
+      return action === 'verify' ? '邮箱验证服务暂时异常，请稍后重试。' : '邮件服务暂时异常，请稍后重新发送验证码。'
+    }
+    if (status === 429) return messages.over_request_rate_limit
   }
   return action === 'verify' ? '暂时无法验证邮箱，请检查网络后重试。' : '验证码未能发送，请检查网络后重试。'
 }

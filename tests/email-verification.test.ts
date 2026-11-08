@@ -157,6 +157,29 @@ test('verification and resend errors are translated without exposing provider te
   }
 })
 
+test('verification and resend distinguish service failures while preserving specific errors', () => {
+  const providerDetails = {
+    message: 'SMTP secret-token at https://private.example/',
+    error_description: 'access_token=private-access',
+  }
+  for (const action of ['verify', 'resend'] as const) {
+    const serviceError = action === 'verify'
+      ? '邮箱验证服务暂时异常，请稍后重试。'
+      : '邮件服务暂时异常，请稍后重新发送验证码。'
+    const fallback = getEmailVerificationError(null, action)
+    assert.equal(getEmailVerificationError({ ...providerDetails, code: 'unexpected_failure' }, action), serviceError)
+    for (const status of [500, 502, 503, 599]) {
+      assert.equal(getEmailVerificationError({ ...providerDetails, code: 'unknown_code', status }, action), serviceError)
+    }
+    assert.match(getEmailVerificationError({ ...providerDetails, code: 'otp_expired', status: 500 }, action), /验证码.*过期/)
+    assert.match(getEmailVerificationError({ ...providerDetails, code: 'over_email_send_rate_limit', status: 503 }, action), /发送过于频繁/)
+    assert.match(getEmailVerificationError({ ...providerDetails, status: 429 }, action), /过于频繁/)
+    for (const status of [400, 401, 403, 499, 600, '500', 500.5, Number.NaN]) {
+      assert.equal(getEmailVerificationError({ ...providerDetails, code: 'unknown_code', status }, action), fallback)
+    }
+  }
+})
+
 test('the PKCE-configured SDK verifies an email code without a saved browser verifier', async () => {
   let called = false
   const client = createClient('https://project.supabase.co', 'sb_publishable_test', {

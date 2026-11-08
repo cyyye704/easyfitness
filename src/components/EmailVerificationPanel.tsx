@@ -12,7 +12,7 @@ type EmailVerificationPanelProps = {
   onContinueAsGuest?: () => void
 }
 
-const SENT_NOTICE = '如果该邮箱需要验证，验证码将发送到此邮箱。请检查收件箱和垃圾邮件，并使用最新验证码。'
+const SENT_NOTICE = '如果该邮箱尚未验证，验证码将发送到此邮箱。请检查收件箱和垃圾邮件，并使用最新验证码。'
 
 export function EmailVerificationPanel({ initialEmail, sentAt, onBack, onContinueAsGuest }: EmailVerificationPanelProps) {
   const [email, setEmail] = useState(initialEmail)
@@ -103,7 +103,7 @@ export function EmailVerificationPanel({ initialEmail, sentAt, onBack, onContinu
       <h2 id="auth-verification-title">验证邮箱</h2>
       <p className="section-description">输入邮件中的验证码，完成邮箱验证并登录。</p>
     </div>
-    <p className="auth-verification-help">无需点击邮件链接。可以在其他浏览器打开本站，进入邮箱验证后输入同一邮箱和验证码。</p>
+    <p className="auth-verification-help">无需点击邮件链接。可以在其他浏览器打开本站，进入邮箱验证后输入同一邮箱和验证码。已验证的邮箱请返回登录，忘记密码可在登录页找回。</p>
     <form className="auth-form" onSubmit={submit} aria-busy={Boolean(busy)}>
       <label htmlFor="auth-verification-email">
         <span>注册邮箱</span>

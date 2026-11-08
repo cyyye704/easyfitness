@@ -62,6 +62,15 @@
 - 从不支持 `/?auth=verify` 的旧版本升级时，必须先发布验证码页面，确认该页面可访问，再紧接着切换 **Confirm sign up** 邮件模板并测试；不要提前切换邮件模板。
 - 邮箱密码注册保持不变，只有注册确认改为输入验证码。密码恢复继续使用原有 PKCE 邮件链接，不修改 **Reset password** 模板。
 
+### 注册收信排查（2026-11-08）
+
+- 只读核实正式站点：验证码页面与数字验证码输入已上线，使用同一 Supabase 项目；后台 **Confirm sign up** 主题为 `EasyFitness 注册验证码`，预览包含 `{{ .Token }}` 和返回验证页链接。自定义 SMTP 仍开启，使用 Brevo 的 `smtp-relay.brevo.com:587`。本次没有修改线上设置或发送测试邮件。
+- Brevo 的 11 月 1–8 日日志共有 12 个事件，对应三封邮件，全部显示已投递：一封旧版注册确认邮件、两封密码恢复邮件；没有新版注册验证码邮件的发送事件。事件中的点击不代表用户已成功登录。
+- 排查中核实：账号可以已完成邮箱确认但尚无成功登录记录，两者是独立状态。最近 24 小时 Auth 日志无事件，免费套餐下更早日志的时间范围受限，不能据此断言较早的注册请求没有到达。
+- 官方实现中，已确认邮箱再次注册会返回已注册错误，或返回脱敏成功结果；重发 `type: 'signup'` 对已确认邮箱直接返回 HTTP 200，不发送邮件。因此进入验证码页面、重发请求没有报错，均不能证明发信。实现见 [signup.go](https://github.com/supabase/auth/blob/master/internal/api/signup.go) 与 [resend.go](https://github.com/supabase/auth/blob/master/internal/api/resend.go)。
+- 已完成邮箱验证的账号应返回密码登录，忘记密码则走密码恢复；后续重发注册确认不会发送验证码。缺少原始尝试的具体时间时，不能用当前已确认状态还原当时所有请求；其他新邮箱的真实验证码投递仍未完成验收。
+- 补充已验证账户的登录指引，并将 `unexpected_failure` / HTTP 5xx 与网络错误区分显示，保留具体错误码优先级且不显示服务商原始错误文本。
+
 ## 1. 建立 Supabase 项目并取得公开配置
 
 在 [Supabase Dashboard](https://supabase.com/dashboard) 新建项目，等待数据库就绪。在项目 Connect 面板或 Settings → API Keys 中取得：

@@ -70,6 +70,7 @@
 .profile-step-actions,
 .profile-review-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   margin-top: 17px;
@@ -283,7 +284,7 @@
   min-width: 0;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 11px;
+  padding: 16px;
   background: var(--surface);
 }
 
@@ -302,6 +303,8 @@
   color: var(--text);
   font-family: var(--mono);
   font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .profile-weight-source {
@@ -317,7 +320,7 @@
   margin-top: 12px;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 14px 16px;
   background: rgba(255, 255, 255, 0.025);
 }
 
